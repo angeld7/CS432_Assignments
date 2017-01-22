@@ -4,27 +4,13 @@
 //
 
 #include "Angel.h"  //includes gl.h, glut.h and other stuff...
+#include "Circle.h"
 void m_glewInitAndVersion(void);  //pre-implementation declaration (could do in header file)
 void close(void);
 
-//Mesh 0
-GLuint buffer;
-GLuint VAO;
-const int NumVertices = 4;
-
-// Vertices of a unit cube centered at origin, sides aligned with axes
-vec2 points[4] = {
-    vec2( 0.25, 0.25),
-    vec2( 0.75, 0.25),
-    vec2( 0.75, 0.75),
-    vec2( 0.25, 0.75)
-};
-
-
-// RGBA colors
-vec4 blue_opaque = vec4( 0.0, 0.0, 1.0, 1.0 );
-
-
+Shape* square;
+Shape* triangle;
+Circle* circle;
 
 //----------------------------------------------------------------------------
 
@@ -32,51 +18,50 @@ vec4 blue_opaque = vec4( 0.0, 0.0, 1.0, 1.0 );
 void
 init()
 {
-
-
-    // Create and initialize a buffer object
-    glGenBuffers( 1, &buffer );
-
-    glBindBuffer( GL_ARRAY_BUFFER, buffer );
-    glBufferData( GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW );
-
-	// Load shaders and use the resulting shader program
-    GLuint program = InitShader( "vshader00_v150.glsl", "fshader00_v150.glsl" );
-    glUseProgram( program );
-
-    // set up vertex arrays
-    GLuint vPosition = glGetAttribLocation( program, "vPosition" );
-
-	//Set up VAO
-	glGenVertexArrays(1,&VAO);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER,buffer);
-    glEnableVertexAttribArray( vPosition );
-    glVertexAttribPointer( vPosition, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
-
-	GLuint color_loc = glGetUniformLocation(program, "color");
-	glUniform4fv(color_loc, 1, blue_opaque);
-
-    glClearColor( 1.0, 1.0, 1.0, 1.0 );
+    vec2 squarePoints[4] = {
+        vec2( 0.25, 0.25),
+        vec2( 0.75, 0.25),
+        vec2( 0.75, 0.75),
+        vec2( 0.25, 0.75)
+    };
+    vec2 trianglePoints[3] = {
+        vec2( -0.2, -0.2),
+        vec2( 0.2, 0.2),
+        vec2( 0.2, -0.2)
+    };
+    std::string solidVShader = "vshader00_v150.glsl";
+    std::string solidFShader = "fshader00_v150.glsl";
+    square = new Shape(solidVShader, solidFShader);
+    square->setPoints(squarePoints, 4);
+    square->setColor(vec4( 1.0, 0.0, 0.0, 1.0 ));
+    square->init();
+    
+    triangle = new Shape(solidVShader, solidFShader);
+    triangle->setPoints(trianglePoints, 3);
+    triangle->setColor(vec4( 0.0, 0.0, 1.0, 1.0 ));
+    triangle->init();
+    
+    circle = new Circle(solidVShader, solidFShader, -0.55, -0.55, 0.3);
+    circle->setColor(vec4(0.0,1.0,0.0,1.0));
+    circle->init();
 }
 
 //----------------------------------------------------------------------------
 
-void
-display( void )
+void display( void )
 {
     glClear( GL_COLOR_BUFFER_BIT );
-
-	glBindVertexArray(VAO);
-	glDrawArrays( GL_TRIANGLE_FAN, 0, NumVertices );
-
+    
+    square->display();
+    triangle->display();
+    circle->display();
+    
 	glFlush();
 }
 
 //----------------------------------------------------------------------------
 
-void
-keyboard( unsigned char key, int x, int y )
+void keyboard( unsigned char key, int x, int y )
 {
     switch( key ) {
 	case 033:  // Escape key
@@ -128,6 +113,6 @@ void m_glewInitAndVersion(void)
 }
 
 void close(){
-	glDeleteBuffers(1, &buffer);  //delete the buffers (free up space on GPU)
-
+    square->deleteBuffer();
+    triangle->deleteBuffer();
 }
