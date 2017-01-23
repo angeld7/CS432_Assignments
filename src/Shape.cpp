@@ -7,6 +7,7 @@
 //
 
 #include "Shape.h"
+#include <stdlib.h>
 
 
 Shape::Shape(std::string vShader, std::string fShader){
@@ -17,23 +18,29 @@ void Shape::init(){
     // Create and initialize a buffer object
     glGenBuffers( 1, &VBO );
     
+    size_t pointsSize = sizeof(vec2) * numPoints;
+    size_t colorSize = sizeof(vec4) * numPoints;
     glBindBuffer( GL_ARRAY_BUFFER, VBO );
-    glBufferData( GL_ARRAY_BUFFER, sizeof(vec2) * numPoints, Shape::points, GL_STATIC_DRAW );
+    glBufferData( GL_ARRAY_BUFFER, pointsSize + colorSize, NULL, GL_STATIC_DRAW );
+    glBufferSubData(GL_ARRAY_BUFFER,0,pointsSize,points);
+    glBufferSubData(GL_ARRAY_BUFFER,pointsSize,colorSize, colors);
     
     // Load shaders and use the resulting shader program
     glUseProgram( program );
     
     // set up vertex arrays
     GLuint vPosition = glGetAttribLocation( program, "vPosition" );
+    GLuint vColor = glGetAttribLocation( program, "vColor" );
     
     //Set up VAO
     glGenVertexArrays(1,&VAO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER,VBO);
+    
     glEnableVertexAttribArray( vPosition );
     glVertexAttribPointer( vPosition, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
-    
-    color_loc = glGetUniformLocation(program, "color");
+    glEnableVertexAttribArray( vColor );
+    glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
     
     glClearColor( 1.0, 1.0, 1.0, 1.0 );
 }
@@ -44,14 +51,31 @@ void Shape::setPoints(Angel::vec2 *points, int numPoints) {
 }
 
 void Shape::setColor(Angel::vec4 color) {
-    Shape::color = color;
+    colors = new vec4[numPoints];
+    for(int x = 0; x < numPoints; x++) {
+        colors[x] = color;
+    }
+}
+
+float rand255() {
+    return (rand() % 255) / 255.0f;
+}
+
+void Shape::setColors(Angel::vec4 *colors) {
+    Shape::colors = colors;
+}
+
+void Shape::setRandomColors() {
+    srand(time(NULL));
+    colors = new vec4[numPoints];
+    for(int x = 0; x < numPoints; x++) {
+        colors[x] = vec4(rand255(),rand255(),rand255(),1.0);
+    }
 }
 
 void Shape::display() {
     glUseProgram( program );
     glBindVertexArray(VAO);
-    
-    glUniform4fv(color_loc, 1, color);
     glDrawArrays( GL_TRIANGLE_FAN, 0, numPoints );
 }
 

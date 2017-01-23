@@ -29,20 +29,20 @@ init()
         vec2( 0.2, 0.2),
         vec2( 0.2, -0.2)
     };
-    std::string solidVShader = "vshader00_v150.glsl";
-    std::string solidFShader = "fshader00_v150.glsl";
-    square = new Shape(solidVShader, solidFShader);
+    std::string pcVShader = "pcvshader.glsl";
+    std::string pcFShader = "pcfshader.glsl";
+    square = new Shape(pcVShader, pcFShader);
     square->setPoints(squarePoints, 4);
     square->setColor(vec4( 1.0, 0.0, 0.0, 1.0 ));
     square->init();
     
-    triangle = new Shape(solidVShader, solidFShader);
+    triangle = new Shape(pcVShader, pcFShader);
     triangle->setPoints(trianglePoints, 3);
     triangle->setColor(vec4( 0.0, 0.0, 1.0, 1.0 ));
     triangle->init();
     
-    circle = new Circle(solidVShader, solidFShader, -0.55, -0.55, 0.3);
-    circle->setColor(vec4(0.0,1.0,0.0,1.0));
+    circle = new Circle(pcVShader, pcFShader, -0.55, -0.55, 0.3);
+    circle->setRandomColors();
     circle->init();
 }
 
