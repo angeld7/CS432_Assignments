@@ -1,4 +1,7 @@
 #include "Angel.h"
+#include <math.h>
+
+const float TWO_PI = 2 * M_PI;
 
 class Shape {
 protected:
@@ -17,4 +20,5 @@ public:
     void setRandomColors();
     void display();
     void deleteBuffer();
+    void rotate(float theta);
 };

@@ -9,7 +9,6 @@
 #include "Shape.h"
 #include <stdlib.h>
 
-
 Shape::Shape(std::string vShader, std::string fShader){
     program = InitShader( vShader.c_str(), fShader.c_str() );
 }
@@ -41,8 +40,6 @@ void Shape::init(){
     glVertexAttribPointer( vPosition, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
     glEnableVertexAttribArray( vColor );
     glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
-    
-    glClearColor( 1.0, 1.0, 1.0, 1.0 );
 }
 
 void Shape::setPoints(Angel::vec2 *points, int numPoints) {
@@ -81,4 +78,8 @@ void Shape::display() {
 
 void Shape::deleteBuffer(){
     glDeleteBuffers(1, &VBO);
+}
+
+void Shape::rotate(float theta){
+    
 }
