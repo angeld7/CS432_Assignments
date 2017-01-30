@@ -10,6 +10,7 @@
 const int WINDOW_WIDTH = 500;
 const int WINDOW_HEIGHT = 500;
 const float ROTATION_INC = TWO_PI / 360;
+float rotAngle = 0;
 
 bool animating = false;
 
@@ -28,15 +29,27 @@ init(){
 
 //----------------------------------------------------------------------------
 
+void timerCallback(int value)
+{
+    
+    if(animating) {
+        rotAngle += ROTATION_INC;
+        std::list<Shape>::iterator it;
+        for (it = shapeList.begin(); it != shapeList.end(); ++it) {
+            it->rotate(rotAngle);
+        }
+    }
+    glutTimerFunc(1000 / 60, timerCallback, value);
+    glutPostRedisplay();
+}
+
 void display( void )
 {
     glClear( GL_COLOR_BUFFER_BIT );
     
-    for(Shape shape : shapeList) {
-        if(animating) {
-            shape.rotate(ROTATION_INC);
-        }
-        shape.display();
+    std::list<Shape>::iterator it;
+    for (it = shapeList.begin(); it != shapeList.end(); ++it) {
+        it->display();
     }
     
 	glFlush();
@@ -67,31 +80,35 @@ void mouse(int button, int state, int x, int y) {
     switch ( button) {
         case GLUT_LEFT_BUTTON:
         {
-            vec2 squarePoints[4] = {
-                vec2( xWorld - 0.2, yWorld + 0.2),
-                vec2( xWorld + 0.2, yWorld + 0.2),
-                vec2( xWorld + 0.2, yWorld - 0.2),
-                vec2( xWorld - 0.2, yWorld - 0.2)
-            };
-            Shape square = Shape(pcVShader, pcFShader);
-            square.setPoints(squarePoints, 4);
-            square.setColor(vec4( 1.0, 0.0, 0.0, 1.0 ));
-            square.init();
-            shapeList.push_back(square);
+            if(state == GLUT_UP) {
+                vec2 squarePoints[4] = {
+                    vec2( xWorld - 0.2, yWorld + 0.2),
+                    vec2( xWorld + 0.2, yWorld + 0.2),
+                    vec2( xWorld + 0.2, yWorld - 0.2),
+                    vec2( xWorld - 0.2, yWorld - 0.2)
+                };
+                Shape square = Shape(pcVShader, pcFShader);
+                square.setPoints(squarePoints, 4);
+                square.setColor(vec4( 1.0, 0.0, 0.0, 1.0 ));
+                square.init();
+                shapeList.push_back(square);
+            }
             break;
         }
         case GLUT_RIGHT_BUTTON:
         {
-            vec2 trianglePoints[3] = {
-                vec2( xWorld, yWorld + 0.2),
-                vec2( xWorld - 0.2, yWorld - 0.2),
-                vec2( xWorld + 0.2, yWorld - 0.2)
-            };
-            Shape triangle = Shape(pcVShader, pcFShader);
-            triangle.setPoints(trianglePoints, 3);
-            triangle.setColor(vec4( 0.0, 0.0, 1.0, 1.0 ));
-            triangle.init();
-            shapeList.push_back(triangle);
+            if(state == GLUT_UP) {
+                vec2 trianglePoints[3] = {
+                    vec2( xWorld, yWorld + 0.2),
+                    vec2( xWorld - 0.2, yWorld - 0.2),
+                    vec2( xWorld + 0.2, yWorld - 0.2)
+                };
+                Shape triangle = Shape(pcVShader, pcFShader);
+                triangle.setPoints(trianglePoints, 3);
+                triangle.setColor(vec4( 0.0, 0.0, 1.0, 1.0 ));
+                triangle.init();
+                shapeList.push_back(triangle);
+            }
             break;
         }
         default:
@@ -122,7 +139,9 @@ int main( int argc, char **argv )
     glutKeyboardFunc( keyboard );
     glutMouseFunc( mouse );
 	glutWMCloseFunc(close);
-
+    
+    glutTimerFunc(1000 / 60, timerCallback, 0);
+    
     glutMainLoop();
     return 0;
 }

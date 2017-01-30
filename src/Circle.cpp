@@ -1,5 +1,4 @@
 #include "Circle.h"
-#include "Math.h"
 
 Circle::Circle(std::string vShader, std::string fShader, float xCenter, float yCenter, float radius)
 : Shape(vShader, fShader)

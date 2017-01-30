@@ -42,9 +42,13 @@ void Shape::init(){
     glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
 }
 
+
 void Shape::setPoints(Angel::vec2 *points, int numPoints) {
     Shape::points = points;
     Shape::numPoints = numPoints;
+    mat3 m(1.0,0,0,0,1.0,0,0,0,1);
+    GLuint rotMatrixLoc = glGetUniformLocation(program, "rot_matrix");
+    glUniformMatrix3fv(rotMatrixLoc,1, GL_TRUE,m);
 }
 
 void Shape::setColor(Angel::vec4 color) {
@@ -81,5 +85,9 @@ void Shape::deleteBuffer(){
 }
 
 void Shape::rotate(float theta){
+    mat3 r(cos(theta),-sin(theta),0,sin(theta),cos(theta),0,0,0,1);
+    glUseProgram( program );
+    GLuint rotMatrixLoc = glGetUniformLocation(program, "rot_matrix");
+    glUniformMatrix3fv(rotMatrixLoc,1, GL_TRUE,r);
     
 }
