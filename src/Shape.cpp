@@ -39,20 +39,25 @@ void Shape::init(){
     glEnableVertexAttribArray( vPosition );
     glVertexAttribPointer( vPosition, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
     glEnableVertexAttribArray( vColor );
-    glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
+    glVertexAttribPointer( vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
+    
+    GLuint brightnessLoc = glGetUniformLocation(program, "brightness");
+    glUniform1f(brightnessLoc, brightness);
+    GLuint matrix = glGetUniformLocation(program, "matrix");
+    glUniformMatrix3fv(matrix,1, GL_TRUE,mat3(1,0,0,0,1,0,0,0,1));
 }
 
 
 void Shape::setPoints(Angel::vec2 *points, int numPoints) {
     Shape::points = points;
     Shape::numPoints = numPoints;
-    mat3 m(1.0,0,0,0,1.0,0,0,0,1);
-    GLuint rotMatrixLoc = glGetUniformLocation(program, "rot_matrix");
-    glUniformMatrix3fv(rotMatrixLoc,1, GL_TRUE,m);
+    glUseProgram( program );
+    GLuint rotAngleLoc = glGetUniformLocation(program, "rot_angle");
+    glUniform1f(rotAngleLoc, 0);
 }
 
-void Shape::setColor(Angel::vec4 color) {
-    colors = new vec4[numPoints];
+void Shape::setColor(Angel::vec3 color) {
+    colors = new vec3[numPoints];
     for(int x = 0; x < numPoints; x++) {
         colors[x] = color;
     }
@@ -62,15 +67,15 @@ float rand255() {
     return (rand() % 255) / 255.0f;
 }
 
-void Shape::setColors(Angel::vec4 *colors) {
+void Shape::setColors(Angel::vec3 *colors) {
     Shape::colors = colors;
 }
 
 void Shape::setRandomColors() {
     srand(time(NULL));
-    colors = new vec4[numPoints];
+    colors = new vec3[numPoints];
     for(int x = 0; x < numPoints; x++) {
-        colors[x] = vec4(rand255(),rand255(),rand255(),1.0);
+        colors[x] = vec3(rand255(),rand255(),rand255());
     }
 }
 
@@ -85,9 +90,33 @@ void Shape::deleteBuffer(){
 }
 
 void Shape::rotate(float theta){
-    mat3 r(cos(theta),-sin(theta),0,sin(theta),cos(theta),0,0,0,1);
-    glUseProgram( program );
-    GLuint rotMatrixLoc = glGetUniformLocation(program, "rot_matrix");
-    glUniformMatrix3fv(rotMatrixLoc,1, GL_TRUE,r);
     
+    rotation += theta;
+    
+    mat3 t1(vec3(1.0,0,center.x),
+            vec3(0,1.0,center.y),
+            vec3(0,0,1.0));
+    
+    mat3 rot(vec3(cos(rotation),-sin(rotation),0),
+             vec3(sin(rotation),cos(rotation),0),
+             vec3(0,0,1.0));
+    
+    mat3 t2(vec3(1.0,0,-center.x),
+            vec3(0,1.0,-center.y),
+            vec3(0,0,1.0));
+    
+    mat3 m = t1 * rot * t2;
+    
+    glUseProgram(program);
+    GLuint matrix = glGetUniformLocation(program, "matrix");
+    glUniformMatrix3fv(matrix,1,GL_TRUE,m);
+    
+}
+
+void Shape::increaseBrightness(float inc) {
+    brightness += inc;
+    if(brightness > 1) brightness = 1;
+    glUseProgram(program);
+    GLuint brightnessLoc = glGetUniformLocation(program, "brightness");
+    glUniform1f(brightnessLoc, brightness);
 }

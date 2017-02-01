@@ -1,22 +1,10 @@
 #version 150
-in vec3 vPosition;
-in vec4 vColor;
+in vec2 vPosition;
+in vec3 vColor;
 out vec4 color;
-uniform mat3 rot_matrix;
+uniform mat3 matrix;
+uniform float brightness;
 void main(){
-    
-    mat3 t1;
-    t1[0] = vec3(1,0,vPosition.x);
-    t1[1] = vec3(0,1,vPosition.y);
-    t1[2] = vec3(0,0,1);
-    
-    mat3 t2;
-    t2[0] = vec3(1,0,-vPosition.x);
-    t2[1] = vec3(0,1,-vPosition.y);
-    t2[2] = vec3(0,0,1);
-    
-    vec3 pos = t1 * rot_matrix * t2 * vPosition;
-    
-    gl_Position = vec4(pos.xy,0,1);
-    color = vColor;
+    gl_Position = vec4((matrix * vec3(vPosition,1)),1);
+    color = vec4(vColor * brightness,brightness);
 }

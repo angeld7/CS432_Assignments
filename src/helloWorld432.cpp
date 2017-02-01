@@ -10,7 +10,7 @@
 const int WINDOW_WIDTH = 500;
 const int WINDOW_HEIGHT = 500;
 const float ROTATION_INC = TWO_PI / 360;
-float rotAngle = 0;
+const float BRIGHTNESS_INC = 1 / 360.0;
 
 bool animating = false;
 
@@ -33,10 +33,10 @@ void timerCallback(int value)
 {
     
     if(animating) {
-        rotAngle += ROTATION_INC;
         std::list<Shape>::iterator it;
         for (it = shapeList.begin(); it != shapeList.end(); ++it) {
-            it->rotate(rotAngle);
+            it->rotate(ROTATION_INC);
+            it->increaseBrightness(BRIGHTNESS_INC);
         }
     }
     glutTimerFunc(1000 / 60, timerCallback, value);
@@ -75,8 +75,9 @@ void mouse(int button, int state, int x, int y) {
     std::string pcVShader = "pcvshader.glsl";
     std::string pcFShader = "pcfshader.glsl";
     
-    float xWorld = (((float) x / glutGet(GLUT_WINDOW_WIDTH)) * 2) - 1;
-    float yWorld = 1 - (((float) y / glutGet(GLUT_WINDOW_HEIGHT)) * 2);
+    float xWorld = (((float) x / glutGet(GLUT_WINDOW_WIDTH)) * 2.0) - 1;
+    float yWorld = 1 - (((float) y / glutGet(GLUT_WINDOW_HEIGHT)) * 2.0);
+    vec2 center = vec2(xWorld, yWorld);
     switch ( button) {
         case GLUT_LEFT_BUTTON:
         {
@@ -89,8 +90,13 @@ void mouse(int button, int state, int x, int y) {
                 };
                 Shape square = Shape(pcVShader, pcFShader);
                 square.setPoints(squarePoints, 4);
-                square.setColor(vec4( 1.0, 0.0, 0.0, 1.0 ));
+                if(glutGetModifiers() == GLUT_ACTIVE_SHIFT || glutGetModifiers() == GLUT_ACTIVE_CTRL) {
+                    square.setRandomColors();
+                } else {
+                    square.setColor(vec3(1.0, 0.0, 0.0));
+                }
                 square.init();
+                square.center = center;
                 shapeList.push_back(square);
             }
             break;
@@ -105,8 +111,13 @@ void mouse(int button, int state, int x, int y) {
                 };
                 Shape triangle = Shape(pcVShader, pcFShader);
                 triangle.setPoints(trianglePoints, 3);
-                triangle.setColor(vec4( 0.0, 0.0, 1.0, 1.0 ));
+                if(glutGetModifiers() == GLUT_ACTIVE_SHIFT || glutGetModifiers() == GLUT_ACTIVE_CTRL) {
+                    triangle.setRandomColors();
+                } else {
+                    triangle.setColor(vec3(0.0, 0.0, 1.0));
+                }
                 triangle.init();
+                triangle.center = center;
                 shapeList.push_back(triangle);
             }
             break;
