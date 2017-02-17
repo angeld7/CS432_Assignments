@@ -44,17 +44,19 @@ void Shape::init(){
     GLuint brightnessLoc = glGetUniformLocation(program, "brightness");
     glUniform1f(brightnessLoc, brightness);
     GLuint matrix = glGetUniformLocation(program, "matrix");
-    glUniformMatrix3fv(matrix,1, GL_TRUE,mat3(1,0,0,0,1,0,0,0,1));
+    glUniformMatrix3fv(matrix,1, GL_TRUE,mat4(1,0,0,0,
+                                              0,1,0,0,
+                                              0,0,1,0,
+                                              0,0,0,1));
 }
 
 
-void Shape::setPoints(Angel::vec2 *points, int numPoints) {
+void Shape::setPoints(Angel::vec3 *points, int numPoints) {
     Shape::points = points;
     Shape::numPoints = numPoints;
-    glUseProgram( program );
-    GLuint rotAngleLoc = glGetUniformLocation(program, "rot_angle");
-    glUniform1f(rotAngleLoc, 0);
 }
+
+
 
 void Shape::setColor(Angel::vec3 color) {
     colors = new vec3[numPoints];
@@ -72,7 +74,7 @@ void Shape::setColors(Angel::vec3 *colors) {
 }
 
 void Shape::setRandomColors() {
-    srand(time(NULL));
+    srand((int)time(NULL));
     colors = new vec3[numPoints];
     for(int x = 0; x < numPoints; x++) {
         colors[x] = vec3(rand255(),rand255(),rand255());
@@ -93,19 +95,13 @@ void Shape::rotate(float theta){
     
     rotation += theta;
     
-    mat3 t1(vec3(1.0,0,center.x),
-            vec3(0,1.0,center.y),
-            vec3(0,0,1.0));
+    mat4 t1 = Translate(center.x,center.y,center.z);
     
-    mat3 rot(vec3(cos(rotation),-sin(rotation),0),
-             vec3(sin(rotation),cos(rotation),0),
-             vec3(0,0,1.0));
+    mat4 rot = RotateY(theta);
     
-    mat3 t2(vec3(1.0,0,-center.x),
-            vec3(0,1.0,-center.y),
-            vec3(0,0,1.0));
+    mat4 t2 = Translate(-center.x,-center.y,-center.z);
     
-    mat3 m = t1 * rot * t2;
+    mat4 m = t1 * rot * t2;
     
     glUseProgram(program);
     GLuint matrix = glGetUniformLocation(program, "matrix");

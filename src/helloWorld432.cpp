@@ -45,7 +45,7 @@ void timerCallback(int value)
 
 void display( void )
 {
-    glClear( GL_COLOR_BUFFER_BIT );
+    glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     std::list<Shape>::iterator it;
     for (it = shapeList.begin(); it != shapeList.end(); ++it) {
@@ -77,16 +77,16 @@ void mouse(int button, int state, int x, int y) {
     
     float xWorld = (((float) x / glutGet(GLUT_WINDOW_WIDTH)) * 2.0) - 1;
     float yWorld = 1 - (((float) y / glutGet(GLUT_WINDOW_HEIGHT)) * 2.0);
-    vec2 center = vec2(xWorld, yWorld);
+    vec3 center = vec3(xWorld, yWorld, -1.0);
     switch ( button) {
         case GLUT_LEFT_BUTTON:
         {
             if(state == GLUT_UP) {
-                vec2 squarePoints[4] = {
-                    vec2( xWorld - 0.2, yWorld + 0.2),
-                    vec2( xWorld + 0.2, yWorld + 0.2),
-                    vec2( xWorld + 0.2, yWorld - 0.2),
-                    vec2( xWorld - 0.2, yWorld - 0.2)
+                vec3 squarePoints[4] = {
+                    vec3( xWorld - 0.2, yWorld + 0.2, -1.0),
+                    vec3( xWorld + 0.2, yWorld + 0.2, -1.0),
+                    vec3( xWorld + 0.2, yWorld - 0.2, -1.0),
+                    vec3( xWorld - 0.2, yWorld - 0.2, -1.0)
                 };
                 Shape square = Shape(pcVShader, pcFShader);
                 square.setPoints(squarePoints, 4);
@@ -104,10 +104,10 @@ void mouse(int button, int state, int x, int y) {
         case GLUT_RIGHT_BUTTON:
         {
             if(state == GLUT_UP) {
-                vec2 trianglePoints[3] = {
-                    vec2( xWorld, yWorld + 0.2),
-                    vec2( xWorld - 0.2, yWorld - 0.2),
-                    vec2( xWorld + 0.2, yWorld - 0.2)
+                vec3 trianglePoints[3] = {
+                    vec3( xWorld, yWorld + 0.2, -1.0),
+                    vec3( xWorld - 0.2, yWorld - 0.2, -1.0),
+                    vec3( xWorld + 0.2, yWorld - 0.2, -1.0)
                 };
                 Shape triangle = Shape(pcVShader, pcFShader);
                 triangle.setPoints(trianglePoints, 3);
@@ -134,7 +134,7 @@ int main( int argc, char **argv )
 {
     glutInit( &argc, argv );
 #ifdef __APPLE__
-    glutInitDisplayMode( GLUT_3_2_CORE_PROFILE|GLUT_RGBA | GLUT_SINGLE);
+    glutInitDisplayMode( GLUT_3_2_CORE_PROFILE|GLUT_RGBA|GLUT_SINGLE|GLUT_DEPTH);
 #else
 	glutInitDisplayMode( GLUT_RGBA | GLUT_SINGLE);
 #endif
