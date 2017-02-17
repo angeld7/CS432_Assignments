@@ -1,4 +1,8 @@
+#ifndef _SHAPE_H
+#define _SHAPE_H
+
 #include "Angel.h"
+#include "Camera.h"
 #include <math.h>
 
 const float TWO_PI = 2 * M_PI;
@@ -10,6 +14,7 @@ protected:
     GLuint VAO;
     vec3* points;
     vec3* colors;
+    mat4 modelMatrix;
     int numPoints;
     float rotation = 0;
     float brightness = 0;
@@ -21,8 +26,10 @@ public:
     virtual void setColor(vec3 color);
     virtual void setColors(vec3* colors);
     virtual void setRandomColors();
-    virtual void display();
+    virtual void display(Camera camera);
     virtual void deleteBuffer();
     virtual void rotate(float theta);
     virtual void increaseBrightness(float brightness);
 };
+
+#endif

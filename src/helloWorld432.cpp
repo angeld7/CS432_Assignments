@@ -3,28 +3,20 @@
 // Display a blue square
 //
 
-#include "Angel.h"  //includes gl.h, glut.h and other stuff...
-#include "Circle.h"
-#include <list>
-
-const int WINDOW_WIDTH = 500;
-const int WINDOW_HEIGHT = 500;
-const float ROTATION_INC = TWO_PI / 360;
-const float BRIGHTNESS_INC = 1 / 360.0;
-
-bool animating = false;
-
-void m_glewInitAndVersion(void);  //pre-implementation declaration (could do in header file)
-void close(void);
-
-std::list<Shape> shapeList;
+#include "main.h"
 
 //----------------------------------------------------------------------------
 
 // OpenGL initialization
 void
 init(){
-    glClearColor( 1.0, 1.0, 1.0, 1.0 );
+    camera = Camera();
+    Polyhedron polyhedron = Polyhedron();
+    shapeList.push_back(polyhedron);
+    polyhedron.init();
+    
+    glClearColor( 0.0, 0.0, 0.4, 0.0 );
+    glEnable(GL_DEPTH_TEST);
 }
 
 //----------------------------------------------------------------------------
@@ -36,10 +28,9 @@ void timerCallback(int value)
         std::list<Shape>::iterator it;
         for (it = shapeList.begin(); it != shapeList.end(); ++it) {
             it->rotate(ROTATION_INC);
-            it->increaseBrightness(BRIGHTNESS_INC);
         }
     }
-    glutTimerFunc(1000 / 60, timerCallback, value);
+    glutTimerFunc(10, timerCallback, value);
     glutPostRedisplay();
 }
 
@@ -49,7 +40,7 @@ void display( void )
     
     std::list<Shape>::iterator it;
     for (it = shapeList.begin(); it != shapeList.end(); ++it) {
-        it->display();
+        it->display(camera);
     }
     
 	glFlush();
@@ -68,64 +59,54 @@ void keyboard( unsigned char key, int x, int y )
         case ' ':
             animating = !animating;
             break;
+        case 'p': case 'P':
+            camera.togglePerspective();
+            break;
+        case 'X':
+            camera.pitchUp();
+            break;
+        case 'x':
+            camera.pitchDown();
+            break;
+        case 'Z':
+            camera.rollClockwise();
+            break;
+        case 'z':
+            camera.rollCounterClockwise();
+            break;
+        case 'C':
+            camera.yawCounterClockwise();
+            break;
+        case 'c':
+            camera.yawClockwise();
+            break;
+        
+    }
+}
+
+void specialKeys(int key, int x, int y) {
+    switch(key) {
+        case GLUT_KEY_UP:
+            camera.moveFoward();
+            break;
+        case GLUT_KEY_DOWN:
+            camera.moveBackward();
+            break;
+        case GLUT_KEY_LEFT:
+            camera.moveLeft();
+            break;
+        case GLUT_KEY_RIGHT:
+            camera.moveRight();
+            break;
+    
     }
 }
 
 void mouse(int button, int state, int x, int y) {
-    std::string pcVShader = "pcvshader.glsl";
-    std::string pcFShader = "pcfshader.glsl";
-    
-    float xWorld = (((float) x / glutGet(GLUT_WINDOW_WIDTH)) * 2.0) - 1;
-    float yWorld = 1 - (((float) y / glutGet(GLUT_WINDOW_HEIGHT)) * 2.0);
-    vec3 center = vec3(xWorld, yWorld, -1.0);
-    switch ( button) {
-        case GLUT_LEFT_BUTTON:
-        {
-            if(state == GLUT_UP) {
-                vec3 squarePoints[4] = {
-                    vec3( xWorld - 0.2, yWorld + 0.2, -1.0),
-                    vec3( xWorld + 0.2, yWorld + 0.2, -1.0),
-                    vec3( xWorld + 0.2, yWorld - 0.2, -1.0),
-                    vec3( xWorld - 0.2, yWorld - 0.2, -1.0)
-                };
-                Shape square = Shape(pcVShader, pcFShader);
-                square.setPoints(squarePoints, 4);
-                if(glutGetModifiers() == GLUT_ACTIVE_SHIFT || glutGetModifiers() == GLUT_ACTIVE_CTRL) {
-                    square.setRandomColors();
-                } else {
-                    square.setColor(vec3(1.0, 0.0, 0.0));
-                }
-                square.init();
-                square.center = center;
-                shapeList.push_back(square);
-            }
-            break;
-        }
-        case GLUT_RIGHT_BUTTON:
-        {
-            if(state == GLUT_UP) {
-                vec3 trianglePoints[3] = {
-                    vec3( xWorld, yWorld + 0.2, -1.0),
-                    vec3( xWorld - 0.2, yWorld - 0.2, -1.0),
-                    vec3( xWorld + 0.2, yWorld - 0.2, -1.0)
-                };
-                Shape triangle = Shape(pcVShader, pcFShader);
-                triangle.setPoints(trianglePoints, 3);
-                if(glutGetModifiers() == GLUT_ACTIVE_SHIFT || glutGetModifiers() == GLUT_ACTIVE_CTRL) {
-                    triangle.setRandomColors();
-                } else {
-                    triangle.setColor(vec3(0.0, 0.0, 1.0));
-                }
-                triangle.init();
-                triangle.center = center;
-                shapeList.push_back(triangle);
-            }
-            break;
-        }
-        default:
-            break;
-    }
-    display();
+}
+
+void reshape(int width, int height) {
+    camera.calculateMatrix();
 }
 
 //----------------------------------------------------------------------------
@@ -136,7 +117,7 @@ int main( int argc, char **argv )
 #ifdef __APPLE__
     glutInitDisplayMode( GLUT_3_2_CORE_PROFILE|GLUT_RGBA|GLUT_SINGLE|GLUT_DEPTH);
 #else
-	glutInitDisplayMode( GLUT_RGBA | GLUT_SINGLE);
+	glutInitDisplayMode( GLUT_RGBA | GLUT_SINGLE | GLUT_DEPTH);
 #endif
     glutInitWindowSize( WINDOW_WIDTH, WINDOW_HEIGHT );
 
@@ -148,10 +129,11 @@ int main( int argc, char **argv )
 
     glutDisplayFunc( display );
     glutKeyboardFunc( keyboard );
-    glutMouseFunc( mouse );
+    glutSpecialFunc(specialKeys);
 	glutWMCloseFunc(close);
+    glutReshapeFunc(reshape);
     
-    glutTimerFunc(1000 / 60, timerCallback, 0);
+    glutTimerFunc(10, timerCallback, 0);
     
     glutMainLoop();
     return 0;

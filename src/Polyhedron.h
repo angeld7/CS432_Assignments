@@ -1,7 +1,11 @@
+#ifndef _POLYHEDRON_H
+#define _POLYHEDRON_H
+
 #include "Shape.h"
 
 class Polyhedron:public Shape{
 public:
-    virtual void init();
-    virtual void rotate(float theta);
+    Polyhedron();
 };
+
+#endif

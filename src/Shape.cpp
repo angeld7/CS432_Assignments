@@ -17,8 +17,8 @@ void Shape::init(){
     // Create and initialize a buffer object
     glGenBuffers( 1, &VBO );
     
-    size_t pointsSize = sizeof(vec2) * numPoints;
-    size_t colorSize = sizeof(vec4) * numPoints;
+    size_t pointsSize = sizeof(vec3) * numPoints;
+    size_t colorSize = sizeof(vec3) * numPoints;
     glBindBuffer( GL_ARRAY_BUFFER, VBO );
     glBufferData( GL_ARRAY_BUFFER, pointsSize + colorSize, NULL, GL_STATIC_DRAW );
     glBufferSubData(GL_ARRAY_BUFFER,0,pointsSize,points);
@@ -37,17 +37,20 @@ void Shape::init(){
     glBindBuffer(GL_ARRAY_BUFFER,VBO);
     
     glEnableVertexAttribArray( vPosition );
-    glVertexAttribPointer( vPosition, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
+    glVertexAttribPointer( vPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
     glEnableVertexAttribArray( vColor );
     glVertexAttribPointer( vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
     
     GLuint brightnessLoc = glGetUniformLocation(program, "brightness");
     glUniform1f(brightnessLoc, brightness);
-    GLuint matrix = glGetUniformLocation(program, "matrix");
-    glUniformMatrix3fv(matrix,1, GL_TRUE,mat4(1,0,0,0,
-                                              0,1,0,0,
-                                              0,0,1,0,
-                                              0,0,0,1));
+    
+    GLuint lineColor = glGetUniformLocation(program, "lineColor");
+    glUniform4fv(lineColor, 1, vec4(0,0,0,1));
+    
+    GLuint drawline = glGetUniformLocation(program, "line");
+    glUniform1i(drawline,0);
+
+    modelMatrix = mat4(1.0f);
 }
 
 
@@ -81,10 +84,24 @@ void Shape::setRandomColors() {
     }
 }
 
-void Shape::display() {
+void Shape::display(Camera camera) {
     glUseProgram( program );
     glBindVertexArray(VAO);
-    glDrawArrays( GL_TRIANGLE_FAN, 0, numPoints );
+    
+    mat4 m = camera.viewMatrix * modelMatrix;
+    
+    GLuint matrix = glGetUniformLocation(program, "matrix");
+    glUniformMatrix4fv(matrix,1,GL_TRUE,m);
+    
+    glDrawArrays( GL_TRIANGLES, 0, numPoints );
+    
+    glLineWidth(5);
+    GLuint drawline = glGetUniformLocation(program, "line");
+    glUniform1i(drawline,1);
+    glDrawArrays( GL_LINES, 0, numPoints );
+    glUniform1i(drawline,0);
+    
+    //glDrawArrays( GL_LINES, 0, numPoints );
 }
 
 void Shape::deleteBuffer(){
@@ -97,15 +114,11 @@ void Shape::rotate(float theta){
     
     mat4 t1 = Translate(center.x,center.y,center.z);
     
-    mat4 rot = RotateY(theta);
+    mat4 rot = RotateY(rotation);
     
     mat4 t2 = Translate(-center.x,-center.y,-center.z);
     
-    mat4 m = t1 * rot * t2;
-    
-    glUseProgram(program);
-    GLuint matrix = glGetUniformLocation(program, "matrix");
-    glUniformMatrix3fv(matrix,1,GL_TRUE,m);
+    modelMatrix = t1 * rot * t2;
     
 }
 
