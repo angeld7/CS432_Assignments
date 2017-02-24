@@ -1,17 +1,16 @@
 #include "Polyhedron.h"
 
-Polyhedron::Polyhedron()
+Polyhedron::Polyhedron(vec3 center, int sides, float length, float radius)
 : Shape("pcvshader.glsl","pcfshader.glsl"){
-    center = vec3(0,0,-2);
-    int num = 7;
-    float radius = 0.5f;
+    Shape::center = center;
+    int num = sides;
     vec3* side1 = new vec3[num];
     vec3* side2 = new vec3[num];
     float inc = TWO_PI / num;
     float angle = 0;
     for(int x = 0; x < num; x++) {
-        side1[x] = vec3(radius * sin(angle) + center.x, radius * cos(angle) + center.y, center.z + 1);
-        side2[x] = vec3(radius * sin(angle) + center.x, radius * cos(angle) + center.y, center.z - 1);
+        side1[x] = vec3(radius * sin(angle) + center.x, radius * cos(angle) + center.y, center.z + length/2);
+        side2[x] = vec3(radius * sin(angle) + center.x, radius * cos(angle) + center.y, center.z - length/2);
         angle += inc;
     }
     
@@ -28,7 +27,7 @@ Polyhedron::Polyhedron()
         
         points[i++] = side1[x];
         points[i++] = side1[next];
-        points[i++] = vec3(center.x, center.y, center.z + 1);
+        points[i++] = vec3(center.x, center.y, center.z + length/2);
         
         points[i++] = side2[x];
         points[i++] = side2[next];
@@ -36,9 +35,8 @@ Polyhedron::Polyhedron()
         
         points[i++] = side2[x];
         points[i++] = side2[next];
-        points[i++] = vec3(center.x, center.y, center.z - 1);
+        points[i++] = vec3(center.x, center.y, center.z - length/2);
     }
     
-    increaseBrightness(1.0);
     setRandomColors();
 }

@@ -3,87 +3,102 @@
 void Camera::calculateMatrix() {
     float width = glutGet(GLUT_WINDOW_WIDTH);
     float height = glutGet(GLUT_WINDOW_HEIGHT);
-    mat4 projection;
     if(orthograpic) {
-        projection = Ortho(-1, 1, -1, 1, 1.0, 3.0);
+        projectionMatrix = Ortho(-1, 1, -1, 1, 1.0, 3.0);
         
     } else {
-        projection = Perspective(65.0, width/height, 1, 100);
+        projectionMatrix = Perspective(65.0, width/height, 1, 100);
     }
-    mat4 c = mat4(u, v, n, t);
-    mat4 view = c * Translate( -eye );
-    viewMatrix = projection * view * mat4(1.0);
+    at = eye-n;
+    cameraMatrix = LookAt(eye,at,v);
+    viewMatrix = projectionMatrix * cameraMatrix;
 }
 
-Camera::Camera(){
-    eye = vec3(0,0,.1);
-    n = normalize(eye - vec3(0,0,0));
-    vec3 uu = normalize(cross(vec3(0,1,0), n));
-    u = vec4(uu.x, uu.y, uu.z, 0.0);
-    vec3 vv = normalize(cross(n,u));
-    v = vec4(vv.x, vv.y, vv.z, 0.0);
-    t = vec4(0.0, 0.0, 0.0, 1.0);
+Camera::Camera(vec4 location, vec4 up){
+    eye = location;
+    v = up;
+    at = vec3(0,0,-10);
+    n = normalize(eye-at);
+    u = normalize(cross(v,n));
+    v = normalize(cross(n,u));
     calculateMatrix();
 }
 
 
+
 void Camera::togglePerspective(){
+    if(!allowMove) return;
     orthograpic = !orthograpic;
     calculateMatrix();
 }
 
 void Camera::moveFoward(){
+    if(!allowMove) return;
     eye -= (n * FOWARD_INC);
     calculateMatrix();
 }
 
 void Camera::moveBackward(){
+    if(!allowMove) return;
     eye += (n * FOWARD_INC);
     calculateMatrix();
 }
 
 void Camera::moveLeft(){
+    if(!allowMove) return;
     eye -= (u * SIDE_INC);
     calculateMatrix();
 }
 
 void Camera::moveRight(){
+    if(!allowMove) return;
     eye += (u * SIDE_INC);
     calculateMatrix();
 }
 
 void Camera::rollClockwise(){
+    if(!allowMove) return;
     u = (cos(T_INC) * u) - (sin(T_INC) * v);
     v = (sin(T_INC) * u) + (cos(T_INC) * v);
     calculateMatrix();
 }
 
 void Camera::rollCounterClockwise(){
+    if(!allowMove) return;
     u = (cos(-T_INC) * u) - (sin(-T_INC) * v);
     v = (sin(-T_INC) * u) + (cos(-T_INC) * v);
     calculateMatrix();
 }
 
 void Camera::pitchUp(){
+    if(!allowMove) return;
     v = (cos(T_INC) * v) - (sin(T_INC) * n);
     n = (sin(T_INC) * v) + (cos(T_INC) * n);
     calculateMatrix();
 }
 
 void Camera::pitchDown(){
+    if(!allowMove) return;
     v = (cos(-T_INC) * v) - (sin(-T_INC) * n);
     n = (sin(-T_INC) * v) + (cos(-T_INC) * n);
     calculateMatrix();
 }
 
 void Camera::yawCounterClockwise(){
+    if(!allowMove) return;
     u = (cos(-T_INC) * u) - (sin(-T_INC) * n);
     n = (sin(-T_INC) * u) + (cos(-T_INC) * n);
     calculateMatrix();
 }
 
 void Camera::yawClockwise(){
+    if(!allowMove) return;
     u = (cos(T_INC) * u) - (sin(T_INC) * n);
     n = (sin(T_INC) * u) + (cos(T_INC) * n);
     calculateMatrix();
 }
+
+vec3 Camera::getEye() {
+    return vec3(eye.x,eye.y,eye.z);
+}
+

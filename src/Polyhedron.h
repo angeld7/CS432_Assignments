@@ -5,7 +5,7 @@
 
 class Polyhedron:public Shape{
 public:
-    Polyhedron();
+    Polyhedron(vec3 center, int sides, float length, float radius);
 };
 
 #endif
