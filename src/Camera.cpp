@@ -58,43 +58,49 @@ void Camera::moveRight(){
 
 void Camera::rollClockwise(){
     if(!allowMove) return;
-    u = (cos(T_INC) * u) - (sin(T_INC) * v);
+    vec4 u2 = (cos(T_INC) * u) - (sin(T_INC) * v);
     v = (sin(T_INC) * u) + (cos(T_INC) * v);
+    u = u2;
     calculateMatrix();
 }
 
 void Camera::rollCounterClockwise(){
     if(!allowMove) return;
-    u = (cos(-T_INC) * u) - (sin(-T_INC) * v);
+    vec4 u2 = (cos(-T_INC) * u) - (sin(-T_INC) * v);
     v = (sin(-T_INC) * u) + (cos(-T_INC) * v);
+    u = u2;
     calculateMatrix();
 }
 
 void Camera::pitchUp(){
     if(!allowMove) return;
-    v = (cos(T_INC) * v) - (sin(T_INC) * n);
+    vec4 v2 = (cos(T_INC) * v) - (sin(T_INC) * n);
     n = (sin(T_INC) * v) + (cos(T_INC) * n);
+    v2 = v;
     calculateMatrix();
 }
 
 void Camera::pitchDown(){
     if(!allowMove) return;
-    v = (cos(-T_INC) * v) - (sin(-T_INC) * n);
+    vec4 v2 = (cos(-T_INC) * v) - (sin(-T_INC) * n);
     n = (sin(-T_INC) * v) + (cos(-T_INC) * n);
+    v = v2;
     calculateMatrix();
 }
 
 void Camera::yawCounterClockwise(){
     if(!allowMove) return;
-    u = (cos(-T_INC) * u) - (sin(-T_INC) * n);
+    vec4 u2 = (cos(-T_INC) * u) - (sin(-T_INC) * n);
     n = (sin(-T_INC) * u) + (cos(-T_INC) * n);
+    u = u2;
     calculateMatrix();
 }
 
 void Camera::yawClockwise(){
     if(!allowMove) return;
-    u = (cos(T_INC) * u) - (sin(T_INC) * n);
+    vec4 u2 = (cos(T_INC) * u) - (sin(T_INC) * n);
     n = (sin(T_INC) * u) + (cos(T_INC) * n);
+    u = u2;
     calculateMatrix();
 }
 
