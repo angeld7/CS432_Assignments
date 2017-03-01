@@ -17,6 +17,8 @@ Sphere::Sphere(vec3 center, float radius, int smoothness)
     divideTriangle(v[3], v[2], v[1], smoothness);
     divideTriangle(v[1], v[3], v[0], smoothness);
     divideTriangle(v[2], v[0], v[3], smoothness);
+    
+    assignParametricNormals();
 }
 
 void Sphere::divideTriangle(vec3 a, vec3 b, vec3 c, int count){

@@ -17,15 +17,23 @@ init(){
     camera = &camera1;
     
     Sphere sphere = Sphere(vec3(0,1,-4),1.0f, 4);
-    sphere.setRandomColors();
-    //sphere.setColor(vec3(1,1,1));
+    sphere.setColor(vec3(0,0,0));
+    sphere.setMaterial(vec4(10,2,3,1), vec4(2,7,10,1), vec4(10,10,10,1), 50);
     sphere.init();
     shapeList.push_back(sphere);
     
     Plane plane = Plane(vec3(0,0,0), 100, 100);
     plane.setColor(vec3(0,1,0)); //green
+    sphere.setMaterial(vec4(.1,.1,.1,1), vec4(.1,.1,.1,1), vec4(.1,.1,.1,1), 1);
     plane.init();
     overlays.push_back(plane);
+    
+    Light light1;
+    light1.position = vec4(0,10,-4,1);
+    light1.specular = vec4(10,10,10,1);
+    light1.diffuse = vec4(10,10,10,1);
+    light1.ambient = vec4(10,10,10,1);
+    lights.push_back(light1);
     
     glClearColor( 0.0, 0.0, 1, 1.5 );
     glEnable(GL_DEPTH_TEST);
@@ -53,10 +61,10 @@ void display( void )
     std::list<Shape>::iterator it;
     
     for (it = overlays.begin(); it != overlays.end(); ++it) {
-        it->display(camera);
+        it->display(camera,lights);
     }
     for (it = shapeList.begin(); it != shapeList.end(); ++it) {
-        it->display(camera);
+        it->display(camera,lights);
     }
     
     

@@ -13,4 +13,6 @@ Plane::Plane(vec3 center, float width, float height)
     points = new vec3[numPoints] {
         p1,p2,p3,p3,p4,p1
     };
+    
+    assignGouradVerticies();
 }

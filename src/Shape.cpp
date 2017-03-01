@@ -18,17 +18,21 @@ void Shape::init(){
     glGenBuffers( 1, &VBO );
     
     size_t pointsSize = sizeof(vec3) * numPoints;
+    size_t normalSize = sizeof(vec3) * numPoints;
     size_t colorSize = sizeof(vec3) * numPoints;
+    
     glBindBuffer( GL_ARRAY_BUFFER, VBO );
-    glBufferData( GL_ARRAY_BUFFER, pointsSize + colorSize, NULL, GL_STATIC_DRAW );
+    glBufferData( GL_ARRAY_BUFFER, pointsSize + colorSize + normalSize, NULL, GL_STATIC_DRAW );
     glBufferSubData(GL_ARRAY_BUFFER,0,pointsSize,points);
     glBufferSubData(GL_ARRAY_BUFFER,pointsSize,colorSize, colors);
+    glBufferSubData(GL_ARRAY_BUFFER,pointsSize+colorSize,normalSize, normals);
     
     // Load shaders and use the resulting shader program
     glUseProgram( program );
     
     // set up vertex arrays
     GLuint vPosition = glGetAttribLocation( program, "vPosition" );
+    GLuint nPosition = glGetAttribLocation( program, "vNormal");
     GLuint vColor = glGetAttribLocation( program, "vColor" );
     
     //Set up VAO
@@ -38,8 +42,22 @@ void Shape::init(){
     
     glEnableVertexAttribArray( vPosition );
     glVertexAttribPointer( vPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
+    glEnableVertexAttribArray( nPosition );
+    glVertexAttribPointer( nPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
     glEnableVertexAttribArray( vColor );
-    glVertexAttribPointer( vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
+    glVertexAttribPointer( vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize+normalSize) );
+    
+    GLuint diffuse_loc = glGetUniformLocation(program, "matDiffuse");
+    glUniform4fv(diffuse_loc, 1, diffuse);
+    
+    GLuint spec_loc = glGetUniformLocation(program, "matSpecular");
+    glUniform4fv(spec_loc, 1, spec);
+    
+    GLuint ambient_loc = glGetUniformLocation(program, "matAmbient");
+    glUniform4fv(ambient_loc, 1, ambient);
+    
+    GLuint alpha_loc = glGetUniformLocation(program, "matAlpha");
+    glUniform1f(alpha_loc, shine);
     
     GLuint brightnessLoc = glGetUniformLocation(program, "brightness");
     glUniform1f(brightnessLoc, 1.0);
@@ -84,14 +102,28 @@ void Shape::setRandomColors() {
     }
 }
 
-void Shape::display(Camera* camera) {
+void Shape::display(Camera* camera, std::vector<Light> lights) {
     glUseProgram( program );
     glBindVertexArray(VAO);
     
-    mat4 m = camera->viewMatrix * modelMatrix;
+    GLuint model_matrix = glGetUniformLocation(program, "model_matrix");
+    glUniformMatrix4fv(model_matrix,1,GL_TRUE,modelMatrix);
+    GLuint camera_matrix = glGetUniformLocation(program, "camera_matrix");
+    glUniformMatrix4fv(camera_matrix,1,GL_TRUE,camera->cameraMatrix);
+    GLuint proj_matrix = glGetUniformLocation(program, "proj_matrix");
+    glUniformMatrix4fv(proj_matrix,1,GL_TRUE,camera->projectionMatrix);
     
-    GLuint matrix = glGetUniformLocation(program, "matrix");
-    glUniformMatrix4fv(matrix,1,GL_TRUE,m);
+    for(int i = 0; i < lights.size(); i++){
+        GLuint light_loc = glGetUniformLocation(program, ("lightPos" + std::to_string(i)).c_str());
+        glUniform4fv(light_loc, 1, lights[i].position);
+        GLuint ambient_loc = glGetUniformLocation(program, ("lightAmbient" + std::to_string(i)).c_str());
+        glUniform4fv(ambient_loc, 1, lights[i].ambient);
+        GLuint diffuse_loc = glGetUniformLocation(program, ("lightDiffuse" + std::to_string(i)).c_str());
+        glUniform4fv(diffuse_loc, 1, lights[i].diffuse);
+        GLuint spec_loc = glGetUniformLocation(program, ("lightSpecular" + std::to_string(i)).c_str());
+        glUniform4fv(spec_loc, 1, lights[i].specular);
+        
+    }
     
     glDrawArrays( GL_TRIANGLES, 0, numPoints );
     
@@ -100,6 +132,49 @@ void Shape::display(Camera* camera) {
 //    glUniform1i(drawline,1);
 //    glDrawArrays( GL_LINES, 0, numPoints );
 //    glUniform1i(drawline,0);
+}
+
+void Shape::assignGouradVerticies() {
+    assignParametricNormals();
+    normals = new vec3[numPoints];
+    vec3* normalSum = new vec3[numPoints];
+    int* counts = new int[numPoints];
+    
+    for(int i=0;i<numPoints;i++) {
+        normalSum[i] = vec3(0,0,0);
+        counts[i] = 0;
+    }
+    
+    for(int i=0;i<numPoints;i++) {
+        int count = 0;
+        for(int j=0;j<numPoints;j++) {
+            if((points[i].x==points[j].x) &&
+               (points[i].y==points[j].y) &&
+               (points[i].z==points[j].z)) {
+                count++;
+                normalSum[i]+=normals[j];
+            }
+        }
+        counts[i]=count;
+    }
+    
+    for(int i=0;i<numPoints;i++) {
+        normals[i]=normalSum[i]/counts[i];
+    }
+}
+
+void Shape::assignParametricNormals() {
+    normals = new vec3[numPoints];
+    for(int i=0;i<numPoints;i++) {
+        normals[i] = normalize(points[i]);
+    }
+}
+
+void Shape::setMaterial(vec4 diffuse, vec4 spec, vec4 ambient, float shine) {
+    Shape::diffuse = diffuse;
+    Shape::spec = spec;
+    Shape::ambient = ambient;
+    Shape::shine = shine;
 }
 
 void Shape::deleteBuffer(){
@@ -118,14 +193,6 @@ void Shape::rotate(float theta){
     
     modelMatrix = t1 * rot * t2;
     
-}
-
-void Shape::increaseBrightness(float inc) {
-    brightness += inc;
-    if(brightness > 1) brightness = 1;
-    glUseProgram(program);
-    GLuint brightnessLoc = glGetUniformLocation(program, "brightness");
-    glUniform1f(brightnessLoc, brightness);
 }
 
 vec3 Shape::normalize(vec3 vec){

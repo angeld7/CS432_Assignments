@@ -31,3 +31,5 @@ std::list<Shape> overlays;
 mat4 convertDoubleArrToMat4(double* arr);
 double* convertMat4ToDoubleArr(mat4 m);
 bool checkCollision();
+
+std::vector<Light> lights;
