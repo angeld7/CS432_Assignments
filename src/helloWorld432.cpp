@@ -18,24 +18,24 @@ init(){
     
     Sphere sphere = Sphere(vec3(0,1,-4),1.0f, 4);
     sphere.setColor(vec3(0,0,0));
-    sphere.setMaterial(vec4(10,2,3,1), vec4(2,7,10,1), vec4(10,10,10,1), 50);
+    sphere.setMaterial(vec4(1,0,0,1), vec4(1,0,0,1), vec4(1,0,0,1), 50);
     sphere.init();
     shapeList.push_back(sphere);
     
     Plane plane = Plane(vec3(0,0,0), 100, 100);
     plane.setColor(vec3(0,1,0)); //green
-    sphere.setMaterial(vec4(.1,.1,.1,1), vec4(.1,.1,.1,1), vec4(.1,.1,.1,1), 1);
+    plane.setMaterial(vec4(0,1,0,1), vec4(0,1,0,1), vec4(0,1,0,1), 50);
     plane.init();
     overlays.push_back(plane);
     
     Light light1;
-    light1.position = vec4(0,10,-4,1);
-    light1.specular = vec4(10,10,10,1);
-    light1.diffuse = vec4(10,10,10,1);
-    light1.ambient = vec4(10,10,10,1);
+    light1.position = vec4(0,10,-1,1);
+    light1.specular = vec4(1,1,1,1);
+    light1.diffuse = vec4(1,1,1,1);
+    light1.ambient = vec4(.2,.2,.2,1);
     lights.push_back(light1);
     
-    glClearColor( 0.0, 0.0, 1, 1.5 );
+    glClearColor( 1.0, 1.0, 1, 1.5 );
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -43,13 +43,14 @@ init(){
 
 void timerCallback(int value)
 {
-    
     if(animating) {
         std::list<Shape>::iterator it;
         for (it = shapeList.begin(); it != shapeList.end(); ++it) {
             it->rotate(ROTATION_INC);
         }
     }
+    Light light = lights[0];
+    light.position = RotateZ(ROTATION_INC) * light.position;
     glutTimerFunc(10, timerCallback, value);
     glutPostRedisplay();
 }

@@ -43,9 +43,9 @@ void Shape::init(){
     glEnableVertexAttribArray( vPosition );
     glVertexAttribPointer( vPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
     glEnableVertexAttribArray( nPosition );
-    glVertexAttribPointer( nPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
+    glVertexAttribPointer( nPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize+colorSize) );
     glEnableVertexAttribArray( vColor );
-    glVertexAttribPointer( vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize+normalSize) );
+    glVertexAttribPointer( vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
     
     GLuint diffuse_loc = glGetUniformLocation(program, "matDiffuse");
     glUniform4fv(diffuse_loc, 1, diffuse);
@@ -67,8 +67,6 @@ void Shape::init(){
     
     GLuint drawline = glGetUniformLocation(program, "line");
     glUniform1i(drawline,0);
-
-    modelMatrix = mat4(1.0f);
 }
 
 
@@ -113,17 +111,51 @@ void Shape::display(Camera* camera, std::vector<Light> lights) {
     GLuint proj_matrix = glGetUniformLocation(program, "proj_matrix");
     glUniformMatrix4fv(proj_matrix,1,GL_TRUE,camera->projectionMatrix);
     
-    for(int i = 0; i < lights.size(); i++){
-        GLuint light_loc = glGetUniformLocation(program, ("lightPos" + std::to_string(i)).c_str());
-        glUniform4fv(light_loc, 1, lights[i].position);
-        GLuint ambient_loc = glGetUniformLocation(program, ("lightAmbient" + std::to_string(i)).c_str());
-        glUniform4fv(ambient_loc, 1, lights[i].ambient);
-        GLuint diffuse_loc = glGetUniformLocation(program, ("lightDiffuse" + std::to_string(i)).c_str());
-        glUniform4fv(diffuse_loc, 1, lights[i].diffuse);
-        GLuint spec_loc = glGetUniformLocation(program, ("lightSpecular" + std::to_string(i)).c_str());
-        glUniform4fv(spec_loc, 1, lights[i].specular);
-        
-    }
+    
+    GLuint light_loc = glGetUniformLocation(program, "lightPos0");
+    glUniform4fv(light_loc, 1, lights[0].position);
+    GLuint ambient_loc = glGetUniformLocation(program, "lightAmbient0");
+    glUniform4fv(ambient_loc, 1, lights[0].ambient);
+    GLuint diffuse_loc = glGetUniformLocation(program, "lightDiffuse0");
+    glUniform4fv(diffuse_loc, 1, lights[0].diffuse);
+    GLuint spec_loc = glGetUniformLocation(program, "lightSpecular0");
+    glUniform4fv(spec_loc, 1, lights[0].specular);
+    
+    
+    diffuse_loc = glGetUniformLocation(program, "matDiffuse");
+    glUniform4fv(diffuse_loc, 1, diffuse);
+    
+    spec_loc = glGetUniformLocation(program, "matSpecular");
+    glUniform4fv(spec_loc, 1, spec);
+    
+    ambient_loc = glGetUniformLocation(program, "matAmbient");
+    glUniform4fv(ambient_loc, 1, ambient);
+    
+    GLuint alpha_loc = glGetUniformLocation(program, "matAlpha");
+    glUniform1f(alpha_loc, shine);
+    
+    GLuint brightnessLoc = glGetUniformLocation(program, "brightness");
+    glUniform1f(brightnessLoc, 1.0);
+    
+    GLuint lineColor = glGetUniformLocation(program, "lineColor");
+    glUniform4fv(lineColor, 1, colors[0]);
+    
+    GLuint drawline = glGetUniformLocation(program, "line");
+    glUniform1i(drawline,0);
+
+    
+    
+//    for(int i = 0; i < lights.size(); i++){
+//        GLuint light_loc = glGetUniformLocation(program, ("lightPos" + std::to_string(i)).c_str());
+//        glUniform4fv(light_loc, 1, lights[i].position);
+//        GLuint ambient_loc = glGetUniformLocation(program, ("lightAmbient" + std::to_string(i)).c_str());
+//        glUniform4fv(ambient_loc, 1, lights[i].ambient);
+//        GLuint diffuse_loc = glGetUniformLocation(program, ("lightDiffuse" + std::to_string(i)).c_str());
+//        glUniform4fv(diffuse_loc, 1, lights[i].diffuse);
+//        GLuint spec_loc = glGetUniformLocation(program, ("lightSpecular" + std::to_string(i)).c_str());
+//        glUniform4fv(spec_loc, 1, lights[i].specular);
+//        
+//    }
     
     glDrawArrays( GL_TRIANGLES, 0, numPoints );
     
@@ -135,7 +167,6 @@ void Shape::display(Camera* camera, std::vector<Light> lights) {
 }
 
 void Shape::assignGouradVerticies() {
-    assignParametricNormals();
     normals = new vec3[numPoints];
     vec3* normalSum = new vec3[numPoints];
     int* counts = new int[numPoints];
@@ -160,13 +191,6 @@ void Shape::assignGouradVerticies() {
     
     for(int i=0;i<numPoints;i++) {
         normals[i]=normalSum[i]/counts[i];
-    }
-}
-
-void Shape::assignParametricNormals() {
-    normals = new vec3[numPoints];
-    for(int i=0;i<numPoints;i++) {
-        normals[i] = normalize(points[i]);
     }
 }
 

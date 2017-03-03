@@ -42,6 +42,7 @@ void main(){
             specular = vec4(0,0,0,1);
         
         color = (ambient+diffuse+specular)*(1/pow(dist,2));
+        //color = diffuse;
         color.a = 1.0;
     }
     

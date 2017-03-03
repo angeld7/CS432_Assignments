@@ -26,9 +26,9 @@ protected:
     float rotation = 0;
     float shine;
     void assignGouradVerticies();
-    void assignParametricNormals();
+
 public:
-    mat4 modelMatrix;
+    mat4 modelMatrix = mat4(1.0f);
     vec3 center;
     Shape(std::string vShader = DEFAULT_V_SHADER, std::string fShader = DEFAULT_F_SHADER);
     virtual void init();

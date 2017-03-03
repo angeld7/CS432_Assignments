@@ -18,7 +18,12 @@ Sphere::Sphere(vec3 center, float radius, int smoothness)
     divideTriangle(v[1], v[3], v[0], smoothness);
     divideTriangle(v[2], v[0], v[3], smoothness);
     
-    assignParametricNormals();
+    normals = new vec3[numPoints];
+    for(int i=0;i<numPoints;i++) {
+        normals[i] = normalize(points[i]);
+    }
+    
+    modelMatrix = Translate(center.x, center.y, center.z);
 }
 
 void Sphere::divideTriangle(vec3 a, vec3 b, vec3 c, int count){
@@ -32,8 +37,8 @@ void Sphere::divideTriangle(vec3 a, vec3 b, vec3 c, int count){
         divideTriangle(b, v3, v1, count - 1);
         divideTriangle(v1, v3, v2, count - 1);
     } else {
-        points[index++] = a * radius + center;
-        points[index++] = b * radius + center;
-        points[index++] = c * radius + center;
+        points[index++] = a * radius;
+        points[index++] = b * radius;
+        points[index++] = c * radius;
     }
 }
