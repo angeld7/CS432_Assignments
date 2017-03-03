@@ -11,6 +11,10 @@ const int WINDOW_HEIGHT = 500;
 const float ROTATION_INC = TWO_PI / 20;
 const float BRIGHTNESS_INC = 1 / 360.0;
 
+float sunRotation = 0;
+
+int t = 0;
+
 Camera* camera;
 Camera camera1;
 Camera camera2;

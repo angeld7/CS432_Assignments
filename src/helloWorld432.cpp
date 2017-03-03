@@ -10,32 +10,45 @@
 // OpenGL initialization
 void
 init(){
-    camera1 = Camera(vec3(0,2,0),vec3(0,1,0));
+    camera1 = Camera(vec3(0,1,0),vec3(0,1,0));
     camera1.allowPick = true;
     camera2 = Camera(vec3(0,10,0),vec3(0,0,1));
     camera2.allowMove = false;
     camera = &camera1;
     
-    Sphere sphere = Sphere(vec3(0,1,-4),1.0f, 4);
+    Sphere sphere = Sphere(vec3(0,1,-4),1.0f, 6);
     sphere.setColor(vec3(0,0,0));
-    sphere.setMaterial(vec4(1,0,0,1), vec4(1,0,0,1), vec4(1,0,0,1), 50);
+    sphere.setMaterial(vec4(1,0,0,1), vec4(1,1,1,1), vec4(1,0,0,1), 50);
     sphere.init();
     shapeList.push_back(sphere);
     
+    Polyhedron cube = Polyhedron(vec3(3,0.5f,-4), 4, 1, 1);
+    cube.setColor(vec3(0,0,1));
+    cube.setMaterial(vec4(0,0,0.5,1), vec4(0,0,1,1), vec4(0,0,1,1), 50);
+    cube.init();
+    shapeList.push_back(cube);
+    
     Plane plane = Plane(vec3(0,0,0), 100, 100);
     plane.setColor(vec3(0,1,0)); //green
-    plane.setMaterial(vec4(0,1,0,1), vec4(0,1,0,1), vec4(0,1,0,1), 50);
+    plane.setMaterial(vec4(0,.4,0,1), vec4(0,0,0,1), vec4(0,1,0,1), 1);
     plane.init();
     overlays.push_back(plane);
     
     Light light1;
-    light1.position = vec4(0,10,-1,1);
+    light1.position = vec4(100,0,0,1);
     light1.specular = vec4(1,1,1,1);
     light1.diffuse = vec4(1,1,1,1);
-    light1.ambient = vec4(.2,.2,.2,1);
+    light1.ambient = vec4(0,0,0,1);
     lights.push_back(light1);
     
-    glClearColor( 1.0, 1.0, 1, 1.5 );
+    Light light2;
+    light2.on = false;
+    light2.specular = vec4(1,1,1,1);
+    light2.diffuse = vec4(.5,.5,.5,1);
+    light2.ambient = vec4(0,0,0,1);
+    lights.push_back(light2);
+    
+    glClearColor( 0, 0, 1, 1.5 );
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -49,8 +62,17 @@ void timerCallback(int value)
             it->rotate(ROTATION_INC);
         }
     }
-    Light light = lights[0];
-    light.position = RotateZ(ROTATION_INC) * light.position;
+    lights[0].position = RotateZ(ROTATION_INC) * lights[0].position;
+    if(lights[0].position.y > 0) {
+        glClearColor( 0, 0, 1, 1.5 );
+        lights[0].on = true;
+    } else {
+        glClearColor( 0, 0, 0, 1.5 );
+        lights[0].on = false;
+    }
+    lights[1].position = camera1.eye;
+    lights[1].dir = camera1.n;
+    
     glutTimerFunc(10, timerCallback, value);
     glutPostRedisplay();
 }
@@ -83,12 +105,7 @@ void keyboard( unsigned char key, int x, int y )
             break;
         }
         case ' ':
-            altCamera = !altCamera;
-            if(altCamera) {
-                camera = &camera2;
-            } else {
-                camera = &camera1;
-            }
+            lights[1].on = !lights[1].on;
             break;
         case 'p': case 'P':
             camera->togglePerspective();

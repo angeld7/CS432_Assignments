@@ -2,7 +2,8 @@
 
 
 Plane::Plane(vec3 center, float width, float height)
-: Shape("pcvshader.glsl","pcfshader.glsl"){
+//: Shape("pcvshader.glsl","pcfshader.glsl"){
+: Shape("vshader00_v150.glsl","fshader00_v150.glsl"){
     numPoints = 6;
     Shape::center = center;
     

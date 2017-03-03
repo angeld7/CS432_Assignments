@@ -4,7 +4,8 @@
 
 class Light {
 public:
-    vec4 position, ambient, diffuse, specular;
+    vec4 position, ambient, diffuse, specular, dir;
+    bool on = true;
 };
 
 
