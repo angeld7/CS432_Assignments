@@ -4,47 +4,47 @@ Skybox::Skybox()
 : Shape("vshader00_v150.glsl","fshader00_v150.glsl"){
     numPoints = 36;
     points = new vec3[numPoints]{
-        vec3(-1.0f,  1.0f, -1.0f),
-        vec3(-1.0f, -1.0f, -1.0f),
-        vec3(1.0f, -1.0f, -1.0f),
-        vec3( 1.0f, -1.0f, -1.0f),
-        vec3(1.0f,  1.0f, -1.0f),
-        vec3(-1.0f,  1.0f, -1.0f),
+        vec3(-100.0f,  100.0f, -100.0f),
+        vec3(-100.0f, -100.0f, -100.0f),
+        vec3(100.0f, -100.0f, -100.0f),
+        vec3( 100.0f, -100.0f, -100.0f),
+        vec3(100.0f,  100.0f, -100.0f),
+        vec3(-100.0f,  100.0f, -100.0f),
         
-        vec3(-1.0f, -1.0f,  1.0f),
-        vec3(-1.0f, -1.0f, -1.0f),
-        vec3(-1.0f,  1.0f, -1.0f),
-        vec3(-1.0f,  1.0f, -1.0f),
-        vec3(-1.0f,  1.0f,  1.0f),
-        vec3(-1.0f, -1.0f,  1.0f),
+        vec3(-100.0f, -100.0f,  100.0f),
+        vec3(-100.0f, -100.0f, -100.0f),
+        vec3(-100.0f,  100.0f, -100.0f),
+        vec3(-100.0f,  100.0f, -100.0f),
+        vec3(-100.0f,  100.0f,  100.0f),
+        vec3(-100.0f, -100.0f,  100.0f),
         
-        vec3(1.0f, -1.0f, -1.0f),
-        vec3(1.0f, -1.0f,  1.0f),
-        vec3(1.0f,  1.0f,  1.0f),
-        vec3(1.0f,  1.0f,  1.0f),
-        vec3(1.0f,  1.0f, -1.0f),
-        vec3(1.0f, -1.0f, -1.0f),
+        vec3(100.0f, -100.0f, -100.0f),
+        vec3(100.0f, -100.0f,  100.0f),
+        vec3(100.0f,  100.0f,  100.0f),
+        vec3(100.0f,  100.0f,  100.0f),
+        vec3(100.0f,  100.0f, -100.0f),
+        vec3(100.0f, -100.0f, -100.0f),
         
-        vec3(-1.0f, -1.0f,  1.0f),
-        vec3(-1.0f,  1.0f,  1.0f),
-        vec3(1.0f,  1.0f,  1.0f),
-        vec3(1.0f,  1.0f,  1.0f),
-        vec3(1.0f, -1.0f,  1.0f),
-        vec3(-1.0f, -1.0f,  1.0f),
+        vec3(-100.0f, -100.0f,  100.0f),
+        vec3(-100.0f,  100.0f,  100.0f),
+        vec3(100.0f,  100.0f,  100.0f),
+        vec3(100.0f,  100.0f,  100.0f),
+        vec3(100.0f, -100.0f,  100.0f),
+        vec3(-100.0f, -100.0f,  100.0f),
         
-        vec3(-1.0f,  1.0f, -1.0f),
-        vec3(1.0f,  1.0f, -1.0f),
-        vec3(1.0f,  1.0f,  1.0f),
-        vec3(1.0f,  1.0f,  1.0f),
-        vec3(-1.0f,  1.0f,  1.0f),
-        vec3(-1.0f,  1.0f, -1.0f),
+        vec3(-100.0f,  100.0f, -100.0f),
+        vec3(100.0f,  100.0f, -100.0f),
+        vec3(100.0f,  100.0f,  100.0f),
+        vec3(100.0f,  100.0f,  100.0f),
+        vec3(-100.0f,  100.0f,  100.0f),
+        vec3(-100.0f,  100.0f, -100.0f),
         
-        vec3(-1.0f, -1.0f, -1.0f),
-        vec3(-1.0f, -1.0f,  1.0f),
-        vec3(1.0f, -1.0f, -1.0f),
-        vec3(1.0f, -1.0f, -1.0f),
-        vec3(-1.0f, -1.0f,  1.0f),
-        vec3(1.0f, -1.0f,  1.0f)
+        vec3(-100.0f, -100.0f, -100.0f),
+        vec3(-100.0f, -100.0f,  100.0f),
+        vec3(100.0f, -100.0f, -100.0f),
+        vec3(100.0f, -100.0f, -100.0f),
+        vec3(-100.0f, -100.0f,  100.0f),
+        vec3(100.0f, -100.0f,  100.0f)
     };
     
     glGenVertexArrays(1, &VAO);
@@ -68,17 +68,17 @@ Skybox::Skybox()
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     
-    GLubyte *skyTop = ppmRead("dispair-ridge_up.ppm", &width, &height);
+    GLubyte *skyTop = ppmRead("sky-top.ppm", &width, &height);
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, skyTop);
-    GLubyte *skyBottom = ppmRead("dispair-ridge_dn.ppm", &width, &height);
+    GLubyte *skyBottom = ppmRead("sky-bottom.ppm", &width, &height);
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, skyBottom);
-    GLubyte *skyRight = ppmRead("dispair-ridge_rt.ppm", &width, &height);
+    GLubyte *skyRight = ppmRead("sky-right.ppm", &width, &height);
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, skyRight);
-    GLubyte *skyLeft = ppmRead("dispair-ridge_lf.ppm", &width, &height);
+    GLubyte *skyLeft = ppmRead("sky-left.ppm", &width, &height);
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, skyLeft);
-    GLubyte *skyFront = ppmRead("dispair-ridge_ft.ppm", &width, &height);
+    GLubyte *skyFront = ppmRead("sky-right.ppm", &width, &height);
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, skyFront);
-    GLubyte *skyBack = ppmRead("dispair-ridge_bk.ppm", &width, &height);
+    GLubyte *skyBack = ppmRead("sky-back.ppm", &width, &height);
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, skyBack);
     
     
