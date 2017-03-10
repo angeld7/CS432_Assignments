@@ -1,14 +1,14 @@
 #version 150
 
-in vec2 textureCoor;
+in vec3 textureCoor;
 
-uniform sampler2D textureID;
+uniform samplerCube skybox;
 
 out vec4 FragColor;
 
 void main() 
 {
-    FragColor = texture(textureID,textureCoor);
+    FragColor = texture(skybox,textureCoor);
     FragColor.a = 1;
 }
 

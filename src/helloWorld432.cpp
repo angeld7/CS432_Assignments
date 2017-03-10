@@ -17,18 +17,12 @@ init(){
     camera = camera1;
     
     skybox = new Skybox();
-    skybox->addTexture("sky.ppm",1024,768);
-    skybox->setColor(vec3(0,0,0));
-    skybox->setMaterial(vec4(0,0,0,1), vec4(0,0,0,1), vec4(0,0,0,0), 50);
-    skybox->init();
     
     Sphere sphere = Sphere(vec3(0,1,-4),1.0f, 6);
     sphere.setColor(vec3(0,0,0));
     sphere.setMaterial(vec4(1,0,0,1), vec4(1,1,1,1), vec4(1,0,0,1), 50);
     sphere.init();
     shapeList.push_back(sphere);
-    
-    int t_id = 0;
     
     TexturedCube cube = TexturedCube(vec3(3,1,-4), 1, 1);
     cube.addTexture("crate_texture.ppm", 512, 512);
@@ -94,12 +88,7 @@ void display( void )
     
     std::list<Shape>::iterator it;
     
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    skybox->modelMatrix = Translate(camera->eye.x, camera->eye.y, camera->eye.z);
-    skybox->display(camera, lights);
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
+    skybox->display(camera);
     
     for (it = overlays.begin(); it != overlays.end(); ++it) {
         it->display(camera,lights);

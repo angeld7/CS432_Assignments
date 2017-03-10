@@ -464,7 +464,8 @@ void Shape::addTexture(char* filename, int width, int height) {
     curTexture = ++numTextures;
     //get the texture data for the quad
     GLuint texture;
-    glGenTextures(1, &texture);    GLubyte *data = ppmRead(filename, &width, &height);
+    glGenTextures(1, &texture);
+    GLubyte *data = ppmRead(filename, &width, &height);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);  //move the data onto the GPU
     delete[] data;  //dont' need this data now that its on the GPU
