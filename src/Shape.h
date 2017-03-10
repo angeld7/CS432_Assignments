@@ -21,12 +21,16 @@ protected:
     vec3* points;
     vec3* normals;
     vec3* colors;
+    vec2* texturePoints;
     vec3 multVec4Mat(mat4 m, vec3 v);
     int numPoints;
     float rotation = 0;
     float shine;
+    std::vector<GLuint> textures;
     void assignGouradVerticies();
-
+    unsigned char* ppmRead(char* filename, int* width, int* height);
+    bool textured = false;
+    int curTexture = 0, numTextures = 0;
 public:
     mat4 modelMatrix = mat4(1.0f);
     vec3 center;
@@ -43,6 +47,8 @@ public:
     void setMaterial(vec4 diffuseLoc, vec4 specLoc, vec4 ambientLoc, float shine);
     static vec3 normalize(vec3 vec);
     static bool gluInvertMatrix(const double m[16], double invOut[16]);
+    void toggleTexture();
+    void addTexture(char* filename, int width, int height);
 };
 
 #endif

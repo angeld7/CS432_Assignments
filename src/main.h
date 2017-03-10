@@ -4,6 +4,8 @@
 #include "Polyhedron.h"
 #include "Plane.h"
 #include "Sphere.h"
+#include "TexturedCube.h"
+#include "Skybox.h"
 #include <list>
 
 const int WINDOW_WIDTH = 500;
@@ -16,8 +18,10 @@ float sunRotation = 0;
 int t = 0;
 
 Camera* camera;
-Camera camera1;
-Camera camera2;
+Camera* camera1;
+Camera* camera2;
+
+Skybox* skybox;
 
 void drawRay(vec3 ray);
 vec4 getRayFromWindow(int mx, int my, vec4* pfront);

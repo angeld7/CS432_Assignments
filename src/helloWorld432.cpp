@@ -10,11 +10,17 @@
 // OpenGL initialization
 void
 init(){
-    camera1 = Camera(vec3(0,1,0),vec3(0,1,0));
-    camera1.allowPick = true;
-    camera2 = Camera(vec3(0,10,0),vec3(0,0,1));
-    camera2.allowMove = false;
-    camera = &camera1;
+    camera1 = new Camera(vec3(0,1,0),vec3(0,1,0));
+    camera1->allowPick = true;
+    camera2 = new Camera(vec3(0,10,0),vec3(0,0,1));
+    camera2->allowMove = false;
+    camera = camera1;
+    
+    skybox = new Skybox();
+    skybox->addTexture("sky.ppm",1024,768);
+    skybox->setColor(vec3(0,0,0));
+    skybox->setMaterial(vec4(0,0,0,1), vec4(0,0,0,1), vec4(0,0,0,0), 50);
+    skybox->init();
     
     Sphere sphere = Sphere(vec3(0,1,-4),1.0f, 6);
     sphere.setColor(vec3(0,0,0));
@@ -22,23 +28,28 @@ init(){
     sphere.init();
     shapeList.push_back(sphere);
     
-    Polyhedron cube = Polyhedron(vec3(3,0.5f,-4), 4, 1, 1);
+    int t_id = 0;
+    
+    TexturedCube cube = TexturedCube(vec3(3,1,-4), 1, 1);
+    cube.addTexture("crate_texture.ppm", 512, 512);
+    cube.addTexture("gummi.ppm", 512, 512);
     cube.setColor(vec3(0,0,1));
-    cube.setMaterial(vec4(0,0,0.5,1), vec4(0,0,1,1), vec4(0,0,1,1), 50);
+    cube.setMaterial(vec4(1,1,1,1), vec4(1,1,1,1), vec4(1,1,1,1), 50);
     cube.init();
     shapeList.push_back(cube);
     
     Plane plane = Plane(vec3(0,0,0), 100, 100);
-    plane.setColor(vec3(0,1,0)); //green
-    plane.setMaterial(vec4(0,.4,0,1), vec4(0,0,0,1), vec4(0,1,0,1), 1);
+    plane.addTexture("ground.ppm", 512, 512);
+    plane.setColor(vec3(0,0,0)); //green
+    plane.setMaterial(vec4(.4,.4,.4,1), vec4(.4,.4,.4,1), vec4(.4,.4,.4,1), 1);
     plane.init();
     overlays.push_back(plane);
     
     Light light1;
-    light1.position = vec4(100,0,0,1);
+    light1.position = vec4(100,0,100,1);
     light1.specular = vec4(1,1,1,1);
     light1.diffuse = vec4(1,1,1,1);
-    light1.ambient = vec4(0,0,0,1);
+    light1.ambient = vec4(.2,.2,.2,1);
     lights.push_back(light1);
     
     Light light2;
@@ -67,11 +78,11 @@ void timerCallback(int value)
         glClearColor( 0, 0, 1, 1.5 );
         lights[0].on = true;
     } else {
-        glClearColor( 0, 0, 0, 1.5 );
-        lights[0].on = false;
+//        glClearColor( 0, 0, 0, 1.5 );
+//        lights[0].on = false;
     }
-    lights[1].position = camera1.eye;
-    lights[1].dir = camera1.n;
+    lights[1].position = camera1->eye;
+    lights[1].dir = camera1->n;
     
     glutTimerFunc(10, timerCallback, value);
     glutPostRedisplay();
@@ -82,6 +93,13 @@ void display( void )
     glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     
     std::list<Shape>::iterator it;
+    
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    skybox->modelMatrix = Translate(camera->eye.x, camera->eye.y, camera->eye.z);
+    skybox->display(camera, lights);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
     
     for (it = overlays.begin(); it != overlays.end(); ++it) {
         it->display(camera,lights);
@@ -133,6 +151,12 @@ void keyboard( unsigned char key, int x, int y )
         case 'c':
             camera->yawClockwise();
             if (checkCollision()) camera->yawCounterClockwise();
+            break;
+        case 't': case 'T':
+            std::list<Shape>::iterator it;
+            for (it = shapeList.begin(); it != shapeList.end(); ++it) {
+                it->toggleTexture();
+            }
             break;
         
     }

@@ -2,8 +2,7 @@
 
 
 Plane::Plane(vec3 center, float width, float height)
-//: Shape("pcvshader.glsl","pcfshader.glsl"){
-: Shape("vshader00_v150.glsl","fshader00_v150.glsl"){
+: Shape("v_texture.glsl","f_texture.glsl"){
     numPoints = 6;
     Shape::center = center;
     
@@ -22,6 +21,12 @@ Plane::Plane(vec3 center, float width, float height)
     normals = new vec3[numPoints] {
         N1,N1,N1,N2,N2,N2
     };
+    
+    texturePoints = new vec2[numPoints]{
+        vec2(0,0),vec2(0,1),vec2(1,1),vec2(1,1),vec2(1,0),vec2(0,0)
+    };
+    
+    textured = true;
     
     modelMatrix = Translate(center.x, center.y, center.z);
 }

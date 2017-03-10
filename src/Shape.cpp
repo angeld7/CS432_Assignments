@@ -20,32 +20,39 @@ void Shape::init(){
     size_t pointsSize = sizeof(vec3) * numPoints;
     size_t normalSize = sizeof(vec3) * numPoints;
     size_t colorSize = sizeof(vec3) * numPoints;
+    size_t textureSize = sizeof(vec2) * numPoints;
     
-    glBindBuffer( GL_ARRAY_BUFFER, VBO );
-    glBufferData( GL_ARRAY_BUFFER, pointsSize + colorSize + normalSize, NULL, GL_STATIC_DRAW );
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, pointsSize + colorSize + normalSize + textureSize, NULL, GL_STATIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER,0,pointsSize,points);
     glBufferSubData(GL_ARRAY_BUFFER,pointsSize,colorSize, colors);
     glBufferSubData(GL_ARRAY_BUFFER,pointsSize+colorSize,normalSize, normals);
+    if(textured) glBufferSubData(GL_ARRAY_BUFFER,pointsSize+colorSize+normalSize,textureSize, texturePoints);
     
     // Load shaders and use the resulting shader program
-    glUseProgram( program );
+    glUseProgram(program);
     
     // set up vertex arrays
-    GLuint vPosition = glGetAttribLocation( program, "vPosition" );
-    GLuint nPosition = glGetAttribLocation( program, "vNormal");
-    GLuint vColor = glGetAttribLocation( program, "vColor" );
+    GLuint vPosition = glGetAttribLocation(program, "vPosition");
+    GLuint nPosition = glGetAttribLocation(program, "vNormal");
+    GLuint vColor = glGetAttribLocation(program, "vColor");
     
     //Set up VAO
     glGenVertexArrays(1,&VAO);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER,VBO);
     
-    glEnableVertexAttribArray( vPosition );
-    glVertexAttribPointer( vPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
-    glEnableVertexAttribArray( nPosition );
-    glVertexAttribPointer( nPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize+colorSize) );
-    glEnableVertexAttribArray( vColor );
-    glVertexAttribPointer( vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize) );
+    glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+    glEnableVertexAttribArray(nPosition);
+    glVertexAttribPointer(nPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize+colorSize));
+    glEnableVertexAttribArray(vColor);
+    glVertexAttribPointer(vColor, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize));
+    if(textured) {
+        GLuint vTexture = glGetAttribLocation(program, "vTexture");
+        glEnableVertexAttribArray(vTexture);
+        glVertexAttribPointer(vTexture, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(pointsSize+colorSize+normalSize));
+    }
     
     GLuint diffuse_loc = glGetUniformLocation(program, "matDiffuse");
     glUniform4fv(diffuse_loc, 1, diffuse);
@@ -126,6 +133,12 @@ void Shape::display(Camera* camera, std::vector<Light> lights) {
         GLuint spec_loc = glGetUniformLocation(program, ("lightSpecular" + std::to_string(i)).c_str());
         glUniform4fv(spec_loc, 1, lights[i].specular);
         
+    }
+    if(textured) {
+        glEnable(GL_TEXTURE_2D);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textures[curTexture]);
+        glUniform1i(glGetUniformLocation(program, "textureID"), 0);
     }
     
     glDrawArrays( GL_TRIANGLES, 0, numPoints );
@@ -378,3 +391,91 @@ bool Shape::gluInvertMatrix(const double m[16], double invOut[16])
     
     return true;
 }
+
+unsigned char* Shape::ppmRead(char* filename, int* width, int* height) {
+    
+    FILE* fp=NULL;
+    int i, w, h, d;
+    unsigned char* image;
+    char head[70];		// max line <= 70 in PPM (per spec).
+#ifdef WIN32
+    fopen_s(&fp, filename, "rb");
+#else
+    fp = fopen(filename, "rb");
+#endif
+    if (fp==NULL) {
+        perror(filename);
+        return NULL;
+    }
+    
+    // Grab first two chars of the file and make sure that it has the
+    // correct magic cookie for a raw PPM file.
+    fgets(head, 70, fp);
+    if (strncmp(head, "P6", 2)) {
+        fprintf(stderr, "%s: Not a raw PPM file\n", filename);
+        return NULL;
+    }
+    
+    // Grab the three elements in the header (width, height, maxval).
+    i = 0;
+    while (i < 3) {
+        fgets(head, 70, fp);
+        if (head[0] == '#')		// skip comments.
+            continue;
+        if (i == 0){
+#ifdef WIN32
+            i += sscanf_s(head, "%d %d %d", &w, &h, &d);
+#else
+            i += sscanf(head, "%d %d %d", &w, &h, &d);
+#endif
+        }
+        else if (i == 1){
+#ifdef WIN32
+            i += sscanf_s(head, "%d %d", &h, &d);
+#else
+            i += sscanf(head, "%d %d", &h, &d);
+#endif
+        }
+        else if (i == 2){
+#ifdef WIN32
+            i += sscanf_s(head, "%d", &d);
+#else
+            i += sscanf(head, "%d", &d);
+#endif
+        }
+    }
+    
+    // Grab all the image data in one fell swoop.
+    image = (unsigned char*)malloc(sizeof(unsigned char) * w * h * 3);
+    fread(image, sizeof(unsigned char), w * h * 3, fp);
+    fclose(fp);
+    
+    *width = w;
+    *height = h;
+    return image;
+    
+}
+
+void Shape::toggleTexture() {
+    if(textured) curTexture = (curTexture + 1) % numTextures;
+}
+
+void Shape::addTexture(char* filename, int width, int height) {
+    curTexture = ++numTextures;
+    //get the texture data for the quad
+    GLuint texture;
+    glGenTextures(1, &texture);    GLubyte *data = ppmRead(filename, &width, &height);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);  //move the data onto the GPU
+    delete[] data;  //dont' need this data now that its on the GPU
+    
+    //set the texturing parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    
+    textures.push_back(texture);
+    curTexture = 0;
+}
+
