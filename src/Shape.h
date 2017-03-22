@@ -32,6 +32,8 @@ protected:
     bool textured = false;
     int curTexture = 0, numTextures = 0;
 public:
+    bool hide = false;
+    bool dPoints = false;
     mat4 modelMatrix = mat4(1.0f);
     vec3 center;
     Shape(std::string vShader = DEFAULT_V_SHADER, std::string fShader = DEFAULT_F_SHADER);

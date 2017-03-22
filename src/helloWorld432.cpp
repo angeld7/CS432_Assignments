@@ -12,8 +12,8 @@ void
 init(){
     camera1 = new Camera(vec3(0,1,0),vec3(0,1,0));
     camera1->allowMove = false;
-    camera2 = new Camera(vec3(0,10,0),vec3(0,0,1));
-    camera2->allowMove = false;
+    camera1->allowPick = true;
+    camera2 = new Camera(vec3(0,1,0),vec3(0,1,0));
     camera = camera1;
     
     skybox = new Skybox();
@@ -23,7 +23,7 @@ init(){
     sphere->setMaterial(vec4(.3,.3,.3,1), vec4(.2,.2,.2,1), vec4(0,0,0,1), 50);
     sphere->init();
     
-    TexturedCube* rw1 = new TexturedCube(vec3(EDGE,1,0), GROUND_SCALE, 1);
+    TexturedCube* rw1 = new TexturedCube(vec3(EDGE,.75,0), GROUND_SCALE, 1);
     rw1->addTexture("crate_texture.ppm", 512, 512);
     rw1->addTexture("gummi.ppm", 512, 512);
     rw1->setColor(vec3(0,0,1));
@@ -31,7 +31,7 @@ init(){
     rw1->init();
     wallList.push_back(rw1);
     
-    TexturedCube* lw1 = new TexturedCube(vec3(-EDGE,1,0), GROUND_SCALE, 1);
+    TexturedCube* lw1 = new TexturedCube(vec3(-EDGE,.75,0), GROUND_SCALE, 1);
     lw1->addTexture("crate_texture.ppm", 512, 512);
     lw1->addTexture("gummi.ppm", 512, 512);
     lw1->setColor(vec3(0,0,1));
@@ -39,7 +39,7 @@ init(){
     lw1->init();
     wallList.push_back(lw1);
     
-    TexturedCube* rw2 = new TexturedCube(vec3(EDGE,1,-GROUND_SCALE), GROUND_SCALE, 1);
+    TexturedCube* rw2 = new TexturedCube(vec3(EDGE,.75,-GROUND_SCALE), GROUND_SCALE, 1);
     rw2->addTexture("crate_texture.ppm", 512, 512);
     rw2->addTexture("gummi.ppm", 512, 512);
     rw2->setColor(vec3(0,0,1));
@@ -47,7 +47,7 @@ init(){
     rw2->init();
     wallList.push_back(rw2);
     
-    TexturedCube* lw2 = new TexturedCube(vec3(-EDGE,1,-GROUND_SCALE), GROUND_SCALE, 1);
+    TexturedCube* lw2 = new TexturedCube(vec3(-EDGE,.75,-GROUND_SCALE), GROUND_SCALE, 1);
     lw2->addTexture("crate_texture.ppm", 512, 512);
     lw2->addTexture("gummi.ppm", 512, 512);
     lw2->setColor(vec3(0,0,1));
@@ -83,46 +83,104 @@ init(){
     light2.ambient = vec4(0,0,0,1);
     lights.push_back(light2);
     
+    lanes = new int[ROWS];
+    boxes = std::vector<Shape*>();
+    
     glClearColor( 0, 0, 1, 1.5 );
     glEnable(GL_DEPTH_TEST);
 }
 
+Shape* newBox() {
+    Shape* box = new TexturedCube(vec3(0,0,0), .5, .5);
+    box->addTexture("crate_texture.ppm", 512, 512);
+    box->addTexture("gummi.ppm", 512, 512);
+    box->setColor(vec3(0,0,1));
+    box->setMaterial(vec4(1,1,1,1), vec4(1,1,1,1), vec4(1,1,1,1), 50);
+    box->init();
+    return box;
+}
+
+void makeBox() {
+    Shape* box;
+    int lane = (rand() % 3);
+    if(boxes.size() == ROWS/DENSITY) {
+        box = boxes[(row/DENSITY)];
+        if(box == 0){
+            box = newBox();
+            boxes[row/DENSITY] = box;
+        }
+    } else {
+        box = newBox();
+        boxes.push_back(box);
+    }
+    box->modelMatrix = Translate(lane-1,.5*.75,-GROUND_SCALE);
+    lanes[row] = lane+1;
+}
+
 //----------------------------------------------------------------------------
+
+
+void die() {
+    if(!dead) {
+        sphere->dPoints = true;
+        nonDead = sphere->modelMatrix;
+        dead = true;
+        pause = true;
+    }
+}
 
 void timerCallback(int value)
 {
-    for(int i=0;i<wallList.size();i++) {
-        wallList[i]->modelMatrix = wallList[i]->modelMatrix * Translate(0, 0, FOWARD_INC);
+    if(!pause) {
+        fowardInc += FOWARD_INC;
+        int nextRow = fowardInc;
+        nextRow %= ROWS;
+        if(lane + 1 == lanes[(nextRow+3)%ROWS] && nextRow != row) {
+            die();
+        }
+        if(nextRow != row && row % DENSITY == 0) {
+            makeBox();
+        }
+        row = nextRow;
+        for(int i=0;i<boxes.size();i++) {
+            boxes[i]->modelMatrix = boxes[i]->modelMatrix * FOWARD_MATRIX;
+        }
+        for(int i=0;i<wallList.size();i++) {
+            wallList[i]->modelMatrix = wallList[i]->modelMatrix * FOWARD_MATRIX;
+        }
+        plane1->modelMatrix = plane1->modelMatrix * FOWARD_MATRIX;
+        plane2->modelMatrix = plane2->modelMatrix * FOWARD_MATRIX;
+        if(fowardInc > GROUND_SCALE) {
+            fowardInc = 0;
+            plane1->modelMatrix = Translate(0, 0, -GROUND_SCALE);
+            wallList[0]->modelMatrix = Translate(EDGE, .75, -GROUND_SCALE);
+            wallList[1]->modelMatrix = Translate(-EDGE, .75, -GROUND_SCALE);
+            Shape* t = plane2;
+            plane2 = plane1;
+            plane1 = t;
+            
+            Shape* w1 = wallList[0];
+            Shape* w2 = wallList[1];
+            wallList[0] = wallList[2];
+            wallList[1] = wallList[3];
+            wallList[2] = w1;
+            wallList[3] = w2;
+        }
+        sphere->modelMatrix = sphere->modelMatrix * RotateX(-ROTATION_INC);
+        if(move >= MOVE_MAX || move <= -MOVE_MAX) {
+            move = 0;
+        }
+        if(move > 0) {
+            move += MOVE_INC;
+            sphere->modelMatrix = sphere->modelMatrix * Translate(MOVE_INC, 0, 0);
+        } else if(move < 0) {
+            move -= MOVE_INC;
+            sphere->modelMatrix = sphere->modelMatrix * Translate(-MOVE_INC, 0, 0);
+        }
     }
-    plane1->modelMatrix = plane1->modelMatrix * Translate(0, 0, FOWARD_INC);
-    plane2->modelMatrix = plane2->modelMatrix * Translate(0, 0, FOWARD_INC);
-    fowardInc += FOWARD_INC;
-    if(fowardInc > GROUND_SCALE) {
-        fowardInc = 0;
-        plane1->modelMatrix = Translate(0, 0, -GROUND_SCALE);
-        wallList[0]->modelMatrix = Translate(EDGE, 1, -GROUND_SCALE);
-        wallList[1]->modelMatrix = Translate(-EDGE, 1, -GROUND_SCALE);
-        Shape* t = plane2;
-        plane2 = plane1;
-        plane1 = t;
-        
-        Shape* w1 = wallList[0];
-        Shape* w2 = wallList[1];
-        wallList[0] = wallList[2];
-        wallList[1] = wallList[3];
-        wallList[2] = w1;
-        wallList[3] = w2;
-    }
-    sphere->modelMatrix = sphere->modelMatrix * RotateX(-ROTATION_INC);
-    if(move >= MOVE_MAX || move <= -MOVE_MAX) {
-        move = 0;
-    }
-    if(move > 0) {
-        move += MOVE_INC;
-        sphere->modelMatrix = sphere->modelMatrix * Translate(MOVE_INC, 0, 0);
-    } else if(move < 0) {
-        move -= MOVE_INC;
-        sphere->modelMatrix = sphere->modelMatrix * Translate(-MOVE_INC, 0, 0);
+    if(dead && curExpand < MAX_EXPAND) {
+        curExpand += EXPAND_INC;
+        sphere->modelMatrix = sphere->modelMatrix * Scale(EXPAND_INC*1.05, EXPAND_INC*0.8, EXPAND_INC);
     }
     glutTimerFunc(10, timerCallback, value);
     glutPostRedisplay();
@@ -140,6 +198,9 @@ void display( void )
     plane2->display(camera, lights);
     for(int i=0;i<wallList.size();i++) {
         wallList[i]->display(camera,lights);
+    }
+    for(int i=0;i<boxes.size();i++) {
+        boxes[i]->display(camera,lights);
     }
     sphere->display(camera, lights);
     
@@ -160,7 +221,10 @@ void keyboard( unsigned char key, int x, int y )
             lights[1].on = !lights[1].on;
             break;
         case 'p': case 'P':
-            camera->togglePerspective();
+            pause = !pause;
+            break;
+        case 'o': case 'O':
+            camera = camera == camera1 ? camera2 : camera1;
             break;
         case 'X':
             camera->pitchUp();
@@ -180,6 +244,18 @@ void keyboard( unsigned char key, int x, int y )
         case 'c':
             camera->yawClockwise();
             break;
+        case 'd': case 'D':
+            die();
+            break;
+        case 'r': case 'R':
+            if(dead) {
+                sphere->dPoints = false;
+                curExpand = 0;
+                dead = false;
+                pause = false;
+                sphere->modelMatrix = nonDead;
+            }
+            break;
     }
 }
 
@@ -193,14 +269,14 @@ void specialKeys(int key, int x, int y) {
             break;
         case GLUT_KEY_LEFT:
             camera->moveLeft();
-            if(move == 0 && lane>1) {
+            if(move == 0 && lane>0 && !pause && camera == camera1 && !dead) {
                 move = -MOVE_INC;
                 lane--;
             }
             break;
         case GLUT_KEY_RIGHT:
             camera->moveRight();
-            if(move == 0 && lane<3) {
+            if(move == 0 && lane<2 && !pause && camera == camera1 && !dead) {
                 move = MOVE_INC;
                 lane++;
             }
@@ -227,6 +303,8 @@ vec4 getRayFromWindow(int mx, int my, vec4* pfront) {
     return ray;
 }
 
+
+
 double* convertMat4ToDoubleArr(mat4 m){
     double* ret = new double[16];
     for(int i = 0; i < 16; i++){
@@ -243,6 +321,27 @@ mat4 convertDoubleArrToMat4(double* arr) {
                 vec4(arr[8],  arr[9],  arr[10], arr[11]),
                 vec4(arr[12], arr[13], arr[14], arr[15]));
 }
+
+void mouse(int button, int state, int x, int y) {
+    if(button == GLUT_LEFT_BUTTON && state == GLUT_UP && camera->allowPick) {
+        vec4* front;
+        vec4 ray = getRayFromWindow(x, y, front);
+        float t = INT_MAX;
+        Shape* box = 0;
+        for(int i=0;i<boxes.size();i++) {
+            vec3* p = new vec3[3];
+            float t2 = boxes[i]->checkCollisionPoly(ray, camera->getEye(), p);
+            if(t2 < t && t2 > 0) {
+                box = boxes[i];
+                t = t2;
+            }
+        }
+        if(box != 0) {
+            box->toggleTexture();
+        }
+    }
+}
+
 
 void reshape(int width, int height) {
     glViewport(0,0,width,height);
@@ -270,6 +369,7 @@ int main( int argc, char **argv )
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard );
     glutSpecialFunc(specialKeys);
+    glutMouseFunc(mouse);
 	glutWMCloseFunc(close);
     glutReshapeFunc(reshape);
     

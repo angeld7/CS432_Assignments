@@ -108,46 +108,53 @@ void Shape::setRandomColors() {
 }
 
 void Shape::display(Camera* camera, std::vector<Light> lights) {
-    glUseProgram( program );
-    glBindVertexArray(VAO);
-    
-    GLuint model_matrix = glGetUniformLocation(program, "model_matrix");
-    glUniformMatrix4fv(model_matrix,1,GL_TRUE,modelMatrix);
-    GLuint camera_matrix = glGetUniformLocation(program, "camera_matrix");
-    glUniformMatrix4fv(camera_matrix,1,GL_TRUE,camera->cameraMatrix);
-    GLuint proj_matrix = glGetUniformLocation(program, "proj_matrix");
-    glUniformMatrix4fv(proj_matrix,1,GL_TRUE,camera->projectionMatrix);
-    
-    
-    for(int i = 0; i < lights.size(); i++){
-        GLuint on_loc = glGetUniformLocation(program, ("lightOn" + std::to_string(i)).c_str());
-        glUniform1i(on_loc, lights[i].on);
-        GLuint light_loc = glGetUniformLocation(program, ("lightPos" + std::to_string(i)).c_str());
-        glUniform4fv(light_loc, 1, lights[i].position);
-        GLuint light_dir = glGetUniformLocation(program, ("lightDir" + std::to_string(i)).c_str());
-        glUniform4fv(light_dir, 1, lights[i].dir);
-        GLuint ambient_loc = glGetUniformLocation(program, ("lightAmbient" + std::to_string(i)).c_str());
-        glUniform4fv(ambient_loc, 1, lights[i].ambient);
-        GLuint diffuse_loc = glGetUniformLocation(program, ("lightDiffuse" + std::to_string(i)).c_str());
-        glUniform4fv(diffuse_loc, 1, lights[i].diffuse);
-        GLuint spec_loc = glGetUniformLocation(program, ("lightSpecular" + std::to_string(i)).c_str());
-        glUniform4fv(spec_loc, 1, lights[i].specular);
+    if(!hide) {
+        glUseProgram( program );
+        glBindVertexArray(VAO);
         
+        GLuint model_matrix = glGetUniformLocation(program, "model_matrix");
+        glUniformMatrix4fv(model_matrix,1,GL_TRUE,modelMatrix);
+        GLuint camera_matrix = glGetUniformLocation(program, "camera_matrix");
+        glUniformMatrix4fv(camera_matrix,1,GL_TRUE,camera->cameraMatrix);
+        GLuint proj_matrix = glGetUniformLocation(program, "proj_matrix");
+        glUniformMatrix4fv(proj_matrix,1,GL_TRUE,camera->projectionMatrix);
+        
+        
+        for(int i = 0; i < lights.size(); i++){
+            GLuint on_loc = glGetUniformLocation(program, ("lightOn" + std::to_string(i)).c_str());
+            glUniform1i(on_loc, lights[i].on);
+            GLuint light_loc = glGetUniformLocation(program, ("lightPos" + std::to_string(i)).c_str());
+            glUniform4fv(light_loc, 1, lights[i].position);
+            GLuint light_dir = glGetUniformLocation(program, ("lightDir" + std::to_string(i)).c_str());
+            glUniform4fv(light_dir, 1, lights[i].dir);
+            GLuint ambient_loc = glGetUniformLocation(program, ("lightAmbient" + std::to_string(i)).c_str());
+            glUniform4fv(ambient_loc, 1, lights[i].ambient);
+            GLuint diffuse_loc = glGetUniformLocation(program, ("lightDiffuse" + std::to_string(i)).c_str());
+            glUniform4fv(diffuse_loc, 1, lights[i].diffuse);
+            GLuint spec_loc = glGetUniformLocation(program, ("lightSpecular" + std::to_string(i)).c_str());
+            glUniform4fv(spec_loc, 1, lights[i].specular);
+            
+        }
+        if(dPoints) {
+            glPointSize(3.0);
+            glDrawArrays( GL_POINTS, 0, numPoints );
+        } else {
+            if(textured) {
+                glEnable(GL_TEXTURE_2D);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, textures[curTexture]);
+                glUniform1i(glGetUniformLocation(program, "textureID"), 0);
+            }
+            
+            glDrawArrays( GL_TRIANGLES, 0, numPoints );
+        }
+        
+    //    glLineWidth(5);
+    //    GLuint drawline = glGetUniformLocation(program, "line");
+    //    glUniform1i(drawline,1);
+    //    glDrawArrays( GL_LINES, 0, numPoints );
+    //    glUniform1i(drawline,0);
     }
-    if(textured) {
-        glEnable(GL_TEXTURE_2D);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textures[curTexture]);
-        glUniform1i(glGetUniformLocation(program, "textureID"), 0);
-    }
-    
-    glDrawArrays( GL_TRIANGLES, 0, numPoints );
-    
-//    glLineWidth(5);
-//    GLuint drawline = glGetUniformLocation(program, "line");
-//    glUniform1i(drawline,1);
-//    glDrawArrays( GL_LINES, 0, numPoints );
-//    glUniform1i(drawline,0);
 }
 
 void Shape::assignGouradVerticies() {
