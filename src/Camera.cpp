@@ -17,7 +17,7 @@ void Camera::calculateMatrix() {
 Camera::Camera(vec4 location, vec4 up){
     eye = location;
     v = up;
-    at = vec3(0,0,-10);
+    at = vec3(0,1,-10);
     n = normalize(eye-at);
     u = normalize(cross(v,n));
     v = normalize(cross(n,u));

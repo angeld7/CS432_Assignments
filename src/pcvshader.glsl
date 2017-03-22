@@ -86,7 +86,7 @@ void main(){
                 color = color + (ambient+diffuse+specular)*(1/pow(dist,2));
             }
         }
-               
+        color = color + vec4(vColor, 1) * 0.2;
         color.a = 1.0;
     }
     

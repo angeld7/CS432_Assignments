@@ -11,36 +11,66 @@
 void
 init(){
     camera1 = new Camera(vec3(0,1,0),vec3(0,1,0));
-    camera1->allowPick = true;
+    camera1->allowMove = false;
     camera2 = new Camera(vec3(0,10,0),vec3(0,0,1));
     camera2->allowMove = false;
     camera = camera1;
     
     skybox = new Skybox();
     
-    Sphere sphere = Sphere(vec3(0,1,-4),1.0f, 6);
-    sphere.setColor(vec3(0,0,0));
-    sphere.setMaterial(vec4(1,0,0,1), vec4(1,1,1,1), vec4(1,0,0,1), 50);
-    sphere.init();
-    shapeList.push_back(sphere);
+    sphere = new Sphere(vec3(0,0.5f,-4),0.5f, 4);
+    sphere->setRandomColors();
+    sphere->setMaterial(vec4(.3,.3,.3,1), vec4(.2,.2,.2,1), vec4(0,0,0,1), 50);
+    sphere->init();
     
-    TexturedCube cube = TexturedCube(vec3(3,1,-4), 1, 1);
-    cube.addTexture("crate_texture.ppm", 512, 512);
-    cube.addTexture("gummi.ppm", 512, 512);
-    cube.setColor(vec3(0,0,1));
-    cube.setMaterial(vec4(1,1,1,1), vec4(1,1,1,1), vec4(1,1,1,1), 50);
-    cube.init();
-    shapeList.push_back(cube);
+    TexturedCube* rw1 = new TexturedCube(vec3(EDGE,1,0), GROUND_SCALE, 1);
+    rw1->addTexture("crate_texture.ppm", 512, 512);
+    rw1->addTexture("gummi.ppm", 512, 512);
+    rw1->setColor(vec3(0,0,1));
+    rw1->setMaterial(vec4(1,1,1,1), vec4(1,1,1,1), vec4(1,1,1,1), 50);
+    rw1->init();
+    wallList.push_back(rw1);
     
-    Plane plane = Plane(vec3(0,0,0), 100, 100);
-    plane.addTexture("ground.ppm", 512, 512);
-    plane.setColor(vec3(0,0,0)); //green
-    plane.setMaterial(vec4(.4,.4,.4,1), vec4(.4,.4,.4,1), vec4(.4,.4,.4,1), 1);
-    plane.init();
-    overlays.push_back(plane);
+    TexturedCube* lw1 = new TexturedCube(vec3(-EDGE,1,0), GROUND_SCALE, 1);
+    lw1->addTexture("crate_texture.ppm", 512, 512);
+    lw1->addTexture("gummi.ppm", 512, 512);
+    lw1->setColor(vec3(0,0,1));
+    lw1->setMaterial(vec4(1,1,1,1), vec4(1,1,1,1), vec4(1,1,1,1), 50);
+    lw1->init();
+    wallList.push_back(lw1);
+    
+    TexturedCube* rw2 = new TexturedCube(vec3(EDGE,1,-GROUND_SCALE), GROUND_SCALE, 1);
+    rw2->addTexture("crate_texture.ppm", 512, 512);
+    rw2->addTexture("gummi.ppm", 512, 512);
+    rw2->setColor(vec3(0,0,1));
+    rw2->setMaterial(vec4(1,1,1,1), vec4(1,1,1,1), vec4(1,1,1,1), 50);
+    rw2->init();
+    wallList.push_back(rw2);
+    
+    TexturedCube* lw2 = new TexturedCube(vec3(-EDGE,1,-GROUND_SCALE), GROUND_SCALE, 1);
+    lw2->addTexture("crate_texture.ppm", 512, 512);
+    lw2->addTexture("gummi.ppm", 512, 512);
+    lw2->setColor(vec3(0,0,1));
+    lw2->setMaterial(vec4(1,1,1,1), vec4(1,1,1,1), vec4(1,1,1,1), 50);
+    lw2->init();
+    wallList.push_back(lw2);
+    
+    plane1 = new Plane(vec3(0,0,0), GROUND_SCALE, GROUND_SCALE);
+    plane1->addTexture("ground.ppm", 512, 512);
+    plane1->setColor(vec3(0,0,0)); //green
+    plane1->setMaterial(vec4(.4,.4,.4,1), vec4(.4,.4,.4,1), vec4(.4,.4,.4,1), 1);
+    plane1->init();
+    overlays.push_back(*plane1);
+    
+    plane2 = new Plane(vec3(0,0,-GROUND_SCALE), GROUND_SCALE, GROUND_SCALE);
+    plane2->addTexture("ground.ppm", 512, 512);
+    plane2->setColor(vec3(0,0,0)); //green
+    plane2->setMaterial(vec4(.4,.4,.4,1), vec4(.4,.4,.4,1), vec4(.4,.4,.4,1), 1);
+    plane2->init();
+    overlays.push_back(*plane2);
     
     Light light1;
-    light1.position = vec4(100,0,100,1);
+    light1.position = vec4(100,100,100,1);
     light1.specular = vec4(1,1,1,1);
     light1.diffuse = vec4(1,1,1,1);
     light1.ambient = vec4(.2,.2,.2,1);
@@ -61,23 +91,39 @@ init(){
 
 void timerCallback(int value)
 {
-    if(animating) {
-        std::list<Shape>::iterator it;
-        for (it = shapeList.begin(); it != shapeList.end(); ++it) {
-            it->rotate(ROTATION_INC);
-        }
+    for(int i=0;i<wallList.size();i++) {
+        wallList[i]->modelMatrix = wallList[i]->modelMatrix * Translate(0, 0, FOWARD_INC);
     }
-    lights[0].position = RotateZ(ROTATION_INC) * lights[0].position;
-    if(lights[0].position.y > 0) {
-        glClearColor( 0, 0, 1, 1.5 );
-        lights[0].on = true;
-    } else {
-//        glClearColor( 0, 0, 0, 1.5 );
-//        lights[0].on = false;
+    plane1->modelMatrix = plane1->modelMatrix * Translate(0, 0, FOWARD_INC);
+    plane2->modelMatrix = plane2->modelMatrix * Translate(0, 0, FOWARD_INC);
+    fowardInc += FOWARD_INC;
+    if(fowardInc > GROUND_SCALE) {
+        fowardInc = 0;
+        plane1->modelMatrix = Translate(0, 0, -GROUND_SCALE);
+        wallList[0]->modelMatrix = Translate(EDGE, 1, -GROUND_SCALE);
+        wallList[1]->modelMatrix = Translate(-EDGE, 1, -GROUND_SCALE);
+        Shape* t = plane2;
+        plane2 = plane1;
+        plane1 = t;
+        
+        Shape* w1 = wallList[0];
+        Shape* w2 = wallList[1];
+        wallList[0] = wallList[2];
+        wallList[1] = wallList[3];
+        wallList[2] = w1;
+        wallList[3] = w2;
     }
-    lights[1].position = camera1->eye;
-    lights[1].dir = camera1->n;
-    
+    sphere->modelMatrix = sphere->modelMatrix * RotateX(-ROTATION_INC);
+    if(move >= MOVE_MAX || move <= -MOVE_MAX) {
+        move = 0;
+    }
+    if(move > 0) {
+        move += MOVE_INC;
+        sphere->modelMatrix = sphere->modelMatrix * Translate(MOVE_INC, 0, 0);
+    } else if(move < 0) {
+        move -= MOVE_INC;
+        sphere->modelMatrix = sphere->modelMatrix * Translate(-MOVE_INC, 0, 0);
+    }
     glutTimerFunc(10, timerCallback, value);
     glutPostRedisplay();
 }
@@ -90,13 +136,12 @@ void display( void )
     
     skybox->display(camera);
     
-    for (it = overlays.begin(); it != overlays.end(); ++it) {
-        it->display(camera,lights);
+    plane1->display(camera, lights);
+    plane2->display(camera, lights);
+    for(int i=0;i<wallList.size();i++) {
+        wallList[i]->display(camera,lights);
     }
-    for (it = shapeList.begin(); it != shapeList.end(); ++it) {
-        it->display(camera,lights);
-    }
-    
+    sphere->display(camera, lights);
     
 	glFlush();
 }
@@ -119,35 +164,22 @@ void keyboard( unsigned char key, int x, int y )
             break;
         case 'X':
             camera->pitchUp();
-            if (checkCollision()) camera->pitchDown();
             break;
         case 'x':
             camera->pitchDown();
-            if (checkCollision()) camera->pitchUp();
             break;
         case 'Z':
             camera->rollClockwise();
-            if (checkCollision()) camera->rollCounterClockwise();
             break;
         case 'z':
             camera->rollCounterClockwise();
-            if (checkCollision()) camera->rollClockwise();
             break;
         case 'C':
             camera->yawCounterClockwise();
-            if (checkCollision()) camera->yawClockwise();
             break;
         case 'c':
             camera->yawClockwise();
-            if (checkCollision()) camera->yawCounterClockwise();
             break;
-        case 't': case 'T':
-            std::list<Shape>::iterator it;
-            for (it = shapeList.begin(); it != shapeList.end(); ++it) {
-                it->toggleTexture();
-            }
-            break;
-        
     }
 }
 
@@ -155,19 +187,23 @@ void specialKeys(int key, int x, int y) {
     switch(key) {
         case GLUT_KEY_UP:
             camera->moveFoward();
-            if (checkCollision()) camera->moveBackward();
             break;
         case GLUT_KEY_DOWN:
             camera->moveBackward();
-            if (checkCollision()) camera->moveFoward();
             break;
         case GLUT_KEY_LEFT:
             camera->moveLeft();
-            if (checkCollision()) camera->moveRight();
+            if(move == 0 && lane>1) {
+                move = -MOVE_INC;
+                lane--;
+            }
             break;
         case GLUT_KEY_RIGHT:
             camera->moveRight();
-            if (checkCollision()) camera->moveLeft();
+            if(move == 0 && lane<3) {
+                move = MOVE_INC;
+                lane++;
+            }
             break;
     
     }
@@ -189,52 +225,6 @@ vec4 getRayFromWindow(int mx, int my, vec4* pfront) {
     vec4 pworld = inverseView * *pfront;
     vec4 ray = pworld - camera->eye;
     return ray;
-}
-
-bool checkCollision() {
-    std::list<Shape>::iterator it;
-    for (it = shapeList.begin(); it != shapeList.end(); ++it) {
-        vec3* p = new vec3[3];
-        float t = it->checkCollisionPoly(camera->getEye(), camera->getEye(), p);
-        if (t > 0 && t < INT_MAX) return true;
-    }
-    return false;
-}
-
-void drawRay(vec3 ray) {
-    vec3 eye = camera->getEye();
-    vec3 r = vec3(ray.x,ray.y,ray.z);
-    Shape l = Shape();
-    l.setPoints(new vec3[2]{eye,eye+r*100},2);
-    l.setColor(vec3(1,0,0));
-    l.init();
-    shapeList.push_back(l);
-}
-
-void mouse(int button, int state, int x, int y) {
-    if(button == GLUT_LEFT_BUTTON && state == GLUT_UP && camera->allowPick) {
-        vec4* front;
-        vec4 ray = getRayFromWindow(x, y, front);
-        //drawRay(vec3(ray.x,ray.y,ray.z));
-        float t = INT_MAX;
-        vec3* points = new vec3[3];
-        std::list<Shape>::iterator it;
-        for (it = shapeList.begin(); it != shapeList.end(); ++it) {
-            vec3* p = new vec3[3];
-            float t2 = it->checkCollisionPoly(ray, camera->getEye(), p);
-            if(t2 < t && t2 > 0) {
-                points = p;
-                t = t2;
-            }
-        }
-        if(t > 0) {
-            Shape shape = Shape();
-            shape.setPoints(points, 3);
-            shape.setColor(vec3(0,0,0));
-            shape.init();
-            overlays.push_back(shape);
-        }
-    }
 }
 
 double* convertMat4ToDoubleArr(mat4 m){
@@ -280,7 +270,6 @@ int main( int argc, char **argv )
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard );
     glutSpecialFunc(specialKeys);
-    glutMouseFunc(mouse);
 	glutWMCloseFunc(close);
     glutReshapeFunc(reshape);
     
@@ -306,7 +295,7 @@ void m_glewInitAndVersion(void)
 }
 
 void close(){
-    for(Shape shape : shapeList) {
-        shape.deleteBuffer();
+    for(int i=0;i<wallList.size();i++) {
+        wallList[i]->deleteBuffer();
     }
 }
